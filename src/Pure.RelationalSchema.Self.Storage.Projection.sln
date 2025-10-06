@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pure.RelationalSchema.Self.Storage.Projection", "Tests\Pure.RelationalSchema.Self.Storage.Projection\Pure.RelationalSchema.Self.Storage.Projection.csproj", "{CE770AA8-2DC1-4ADB-B091-FC0E9710721C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pure.RelationalSchema.Self.Storage.Projection.Tests", "Tests\Pure.RelationalSchema.Self.Storage.Projection\Pure.RelationalSchema.Self.Storage.Projection.Tests.csproj", "{CE770AA8-2DC1-4ADB-B091-FC0E9710721C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
