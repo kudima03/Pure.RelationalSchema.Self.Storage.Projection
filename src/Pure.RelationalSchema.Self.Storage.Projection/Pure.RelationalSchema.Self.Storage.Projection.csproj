@@ -4,6 +4,16 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Pure.RelationalSchema.Self.Storage.Projection</PackageId>
+    <RootNamespace>Pure.RelationalSchema.Self.Storage.Projection</RootNamespace>
+    <AssemblyName>Pure.RelationalSchema.Self.Storage.Projection</AssemblyName>
+    <Authors>Dmitry Kurochkin</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kudima03/Pure.RelationalSchema.Self.Storage.Projection</PackageProjectUrl>
   </PropertyGroup>
 
 </Project>
