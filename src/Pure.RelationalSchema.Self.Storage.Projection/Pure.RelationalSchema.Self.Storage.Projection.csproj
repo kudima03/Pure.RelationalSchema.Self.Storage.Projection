@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
-
   <PropertyGroup>
     <PackageId>Pure.RelationalSchema.Self.Storage.Projection</PackageId>
     <RootNamespace>Pure.RelationalSchema.Self.Storage.Projection</RootNamespace>
@@ -15,5 +13,4 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/kudima03/Pure.RelationalSchema.Self.Storage.Projection</PackageProjectUrl>
   </PropertyGroup>
-
 </Project>
