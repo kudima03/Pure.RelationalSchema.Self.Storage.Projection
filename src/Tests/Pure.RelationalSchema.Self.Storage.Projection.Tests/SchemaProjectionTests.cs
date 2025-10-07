@@ -7,6 +7,8 @@ public sealed record SchemaProjectionTests
     [Fact]
     public void Enumerates()
     {
-        Assert.NotEmpty(new SchemaProjection(new RandomSchema()).Select(x => x.ToArray()));
+        Assert.NotEmpty(
+            new SchemaProjection(new RandomSchema()).Select(x => x.ToArray())
+        );
     }
 }
