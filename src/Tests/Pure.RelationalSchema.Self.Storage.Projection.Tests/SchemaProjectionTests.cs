@@ -17,7 +17,10 @@ public sealed record SchemaProjectionTests
     public void EnumerateCells()
     {
         int count = new SchemaProjection(new RandomSchema())
-            .SelectMany(x => x.SelectMany(c => c.Cells.Values.Select(v => v.Value)).ToArray()).Count();
+            .SelectMany(x =>
+                x.SelectMany(c => c.Cells.Values.Select(v => v.Value)).ToArray()
+            )
+            .Count();
         Assert.NotEqual(0, count);
     }
 }
