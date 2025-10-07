@@ -13,4 +13,10 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/kudima03/Pure.RelationalSchema.Self.Storage.Projection</PackageProjectUrl>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Pure.Collections.Generic" Version="0.1.0-preview.1.0.0" />
+    <PackageReference Include="Pure.RelationalSchema.HashCodes" Version="2.0.0" />
+    <PackageReference Include="Pure.RelationalSchema.Self.Schema" Version="0.1.0-preview.2.0.0" />
+    <PackageReference Include="Pure.RelationalSchema.Storage" Version="0.1.0-preview.5.0.0" />
+  </ItemGroup>
 </Project>
