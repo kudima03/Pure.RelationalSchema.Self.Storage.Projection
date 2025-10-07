@@ -1,4 +1,4 @@
-using Pure.RelationalSchema.Random;
+using Pure.RelationalSchema.Self.Schema;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
 
@@ -9,18 +9,17 @@ public sealed record SchemaProjectionTests
     {
         Assert.Equal(
             10,
-            new SchemaProjection(new RandomSchema()).Select(x => x.ToArray()).Count()
+            new SchemaProjection(new RelationalSchemaSchema()).Select(x => x.ToArray()).Count()
         );
     }
 
     [Fact]
-    public void EnumerateCells()
+    public void CorrectCellsCount()
     {
-        int count = new SchemaProjection(new RandomSchema())
+        Assert.Equal(254, new SchemaProjection(new RelationalSchemaSchema())
             .SelectMany(x =>
                 x.SelectMany(c => c.Cells.Values.Select(v => v.Value)).ToArray()
             )
-            .Count();
-        Assert.NotEqual(0, count);
+            .Count());
     }
 }
