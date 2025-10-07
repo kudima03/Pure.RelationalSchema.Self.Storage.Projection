@@ -2,9 +2,9 @@ using Pure.HashCodes;
 using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Storage.Abstractions;
 
-namespace Pure.RelationalSchema.Self.Storage.Projection;
+namespace Pure.RelationalSchema.Self.Storage.Projection.Mappings;
 
-public sealed record CellSwitch<TSelector> : ICell
+public sealed record CellMapping<TSelector> : ICell
 {
     private readonly TSelector _parameter;
 
@@ -14,14 +14,14 @@ public sealed record CellSwitch<TSelector> : ICell
 
     private readonly IEnumerable<KeyValuePair<TSelector, ICell>> _branches;
 
-    public CellSwitch(
+    public CellMapping(
         TSelector parameter,
         IEnumerable<KeyValuePair<TSelector, ICell>> branches,
         Func<TSelector, IDeterminedHash> hashFactory
     )
         : this(parameter, branches, hashFactory, null!) { }
 
-    public CellSwitch(
+    public CellMapping(
         TSelector parameter,
         IEnumerable<KeyValuePair<TSelector, ICell>> branches,
         Func<TSelector, IDeterminedHash> hashFactory,
