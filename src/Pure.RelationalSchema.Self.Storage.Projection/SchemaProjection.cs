@@ -125,6 +125,15 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
                 (column, entity) => new SchemasMapping(entity, column)
             )
         );
+
+        yield return new Grouping(
+            new SchemasToTablesTable(),
+            new ProjectionOnRows<(ISchema, ITable)>(
+                new SchemasToTablesTable(),
+                _schema.Tables.Select(table => (_schema, table)),
+                (column, entity) => new SchemasToTablesMapping(entity, column)
+            )
+        );
     }
 
     IEnumerator IEnumerable.GetEnumerator()
