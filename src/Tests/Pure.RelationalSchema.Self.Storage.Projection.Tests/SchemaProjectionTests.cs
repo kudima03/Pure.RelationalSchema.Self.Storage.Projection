@@ -8,7 +8,7 @@ public sealed record SchemaProjectionTests
     public void CorrectGroupCount()
     {
         Assert.Equal(
-            10,
+            11,
             new SchemaProjection(new RandomSchema()).Select(x => x.ToArray()).Count()
         );
     }
