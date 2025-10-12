@@ -1,14 +1,8 @@
 using System.Data;
 using Npgsql;
-using Pure.Primitives.Bool;
-using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.Schema;
-using Pure.RelationalSchema.Abstractions.Table;
-using Pure.RelationalSchema.ColumnType;
 using Testcontainers.PostgreSql;
-using String = Pure.Primitives.String.String;
 
-namespace Pure.RelationalSchema.Storage.PostgreSQL.Tests;
+namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
 
 public sealed record DatabaseFixture : IDisposable
 {
