@@ -23,7 +23,7 @@ internal sealed record SchemaToTablesProjection : IRow
     private readonly IEnumerable<IColumn> _columns;
 
     public SchemaToTablesProjection((ISchema schema, ITable table) entity)
-        : this(entity, new TablesToIndexesTable().Columns) { }
+        : this(entity, new SchemasToTablesTable().Columns) { }
 
     public SchemaToTablesProjection(
         (ISchema schema, ITable table) entity,

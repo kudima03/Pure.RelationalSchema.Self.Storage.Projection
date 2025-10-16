@@ -24,7 +24,7 @@ internal sealed record ForeignKeyToReferencingColumnProjection : IRow
     public ForeignKeyToReferencingColumnProjection(
         (IForeignKey foreignKey, IColumn column) entity
     )
-        : this(entity, new ForeignKeysToReferencedColumnsTable().Columns) { }
+        : this(entity, new ForeignKeysToReferencingColumnsTable().Columns) { }
 
     public ForeignKeyToReferencingColumnProjection(
         (IForeignKey foreignKey, IColumn column) entity,

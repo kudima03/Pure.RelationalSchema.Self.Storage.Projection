@@ -8,6 +8,7 @@ using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Self.Storage.Projection.Mappings;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -35,11 +36,19 @@ internal sealed record ForeignKeyProjection : IRow
                 [
                     new KeyValuePair<IColumn, ICell>(
                         new ReferencingTableColumn(),
-                        new Cell(new HexString(new TableHash(_entity.ReferencingTable)))
+                        new Cell(
+                            new HexString(
+                                new RowHash(new TableProjection(_entity.ReferencingTable))
+                            )
+                        )
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new ReferencedTableColumn(),
-                        new Cell(new HexString(new TableHash(_entity.ReferencedTable)))
+                        new Cell(
+                            new HexString(
+                                new RowHash(new TableProjection(_entity.ReferencedTable))
+                            )
+                        )
                     ),
                 ],
                 column => new ColumnHash(column)
