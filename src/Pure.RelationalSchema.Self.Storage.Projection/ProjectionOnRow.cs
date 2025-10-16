@@ -1,34 +1,36 @@
-using System.Collections;
+using Pure.Collections.Generic;
 using Pure.RelationalSchema.Abstractions.Column;
+using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Storage.Abstractions;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
-internal sealed record ProjectionOnRows<T> : IEnumerable<IRow>
+internal sealed record ProjectionOnRow<T> : IRow
 {
     private readonly IEnumerable<IColumn> _columns;
 
-    private readonly IEnumerable<T> _entities;
+    private readonly T _entity;
 
     private readonly Func<IColumn, T, ICell> _cellSwitchFactory;
 
-    public ProjectionOnRows(
+    public ProjectionOnRow(
         IEnumerable<IColumn> columns,
-        IEnumerable<T> entities,
+        T entity,
         Func<IColumn, T, ICell> cellSwitchFactory
     )
     {
         _columns = columns;
-        _entities = entities;
+        _entity = entity;
         _cellSwitchFactory = cellSwitchFactory;
     }
 
-    public IEnumerator<IRow> GetEnumerator()
-    {
-        return _entities
-            .Select(x => new ProjectionOnRow<T>(_columns, x, _cellSwitchFactory))
-            .GetEnumerator();
-    }
+    public IReadOnlyDictionary<IColumn, ICell> Cells =>
+        new Dictionary<IColumn, IColumn, ICell>(
+            _columns,
+            x => x,
+            x => _cellSwitchFactory(x, _entity),
+            x => new ColumnHash(x)
+        );
 
     public override int GetHashCode()
     {
@@ -38,10 +40,5 @@ internal sealed record ProjectionOnRows<T> : IEnumerable<IRow>
     public override string ToString()
     {
         throw new NotSupportedException();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
     }
 }
