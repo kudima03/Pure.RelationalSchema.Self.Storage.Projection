@@ -55,4 +55,20 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
 
         Assert.Equal(98, schemaDataSet.SelectMany(x => x.Value).Count());
     }
+
+    [Fact]
+    public void ThrowsExceptionOnGetHashCode()
+    {
+        _ = Assert.Throws<NotSupportedException>(() =>
+            new SchemaProjection(new RelationalSchemaSchema()).GetHashCode()
+        );
+    }
+
+    [Fact]
+    public void ThrowsExceptionOnToString()
+    {
+        _ = Assert.Throws<NotSupportedException>(() =>
+            new SchemaProjection(new RelationalSchemaSchema()).ToString()
+        );
+    }
 }
