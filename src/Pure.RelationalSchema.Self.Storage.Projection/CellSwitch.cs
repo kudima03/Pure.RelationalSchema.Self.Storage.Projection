@@ -2,7 +2,7 @@ using Pure.HashCodes;
 using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Storage.Abstractions;
 
-namespace Pure.RelationalSchema.Self.Storage.Projection.Mappings;
+namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 public sealed record CellSwitch<TSelector> : ICell
 {
