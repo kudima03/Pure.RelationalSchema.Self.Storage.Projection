@@ -4,7 +4,7 @@ using Pure.RelationalSchema.Storage.Abstractions;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Mappings;
 
-public sealed record CellMapping<TSelector> : ICell
+public sealed record CellSwitch<TSelector> : ICell
 {
     private readonly TSelector _parameter;
 
@@ -14,14 +14,14 @@ public sealed record CellMapping<TSelector> : ICell
 
     private readonly IEnumerable<KeyValuePair<TSelector, ICell>> _branches;
 
-    public CellMapping(
+    public CellSwitch(
         TSelector parameter,
         IEnumerable<KeyValuePair<TSelector, ICell>> branches,
         Func<TSelector, IDeterminedHash> hashFactory
     )
         : this(parameter, branches, hashFactory, null!) { }
 
-    public CellMapping(
+    public CellSwitch(
         TSelector parameter,
         IEnumerable<KeyValuePair<TSelector, ICell>> branches,
         Func<TSelector, IDeterminedHash> hashFactory,
