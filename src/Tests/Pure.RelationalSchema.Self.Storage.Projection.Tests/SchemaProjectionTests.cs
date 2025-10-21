@@ -57,6 +57,34 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public void CreateMultipleSelfProjection()
+    {
+        ISchema schema = new PostgreSqlCreatedSchema(
+            new RelationalSchemaSchema(),
+            _databaseFixture.Connection
+        );
+
+        IStoredSchemaDataSet aggregated = Enumerable
+            .Range(0, 100)
+            .Aggregate(
+                new PostgreSqlStoredSchemaDataSetWithInsertedRows(
+                    new PostgreSqlStoredSchemaDataSet(
+                        schema,
+                        _databaseFixture.Connection
+                    ),
+                    new SchemaProjection(new RelationalSchemaSchema())
+                ),
+                (x, _) =>
+                    new PostgreSqlStoredSchemaDataSetWithInsertedRows(
+                        x,
+                        new SchemaProjection(new RelationalSchemaSchema())
+                    )
+            );
+
+        Assert.Equal(98, aggregated.SelectMany(x => x.Value).Count());
+    }
+
+    [Fact]
     public void ThrowsExceptionOnGetHashCode()
     {
         _ = Assert.Throws<NotSupportedException>(() =>
