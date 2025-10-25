@@ -6,8 +6,7 @@ using Pure.RelationalSchema.Storage.PostgreSQL;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
 
-public sealed record SchemaProjectionTests     : IAsyncLifetime,
-        IDisposable
+public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
 {
     private DatabaseFixture? _databaseFixture;
 
