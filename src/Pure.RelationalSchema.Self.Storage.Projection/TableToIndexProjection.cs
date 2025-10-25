@@ -41,10 +41,6 @@ internal sealed record TableToIndexProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new GuidColumn(),
-                        new Cell(new String(new Ulid(Guid.CreateVersion7())))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
                         new ReferenceToIndexColumn(),
                         new Cell(
                             new HexString(new RowHash(new IndexProjection(_entity.index)))

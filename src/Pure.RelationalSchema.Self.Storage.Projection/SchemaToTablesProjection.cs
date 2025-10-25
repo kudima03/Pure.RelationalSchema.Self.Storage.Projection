@@ -41,10 +41,6 @@ internal sealed record SchemaToTablesProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new GuidColumn(),
-                        new Cell(new String(new Ulid(Guid.CreateVersion7())))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
                         new ReferenceToTableColumn(),
                         new Cell(
                             new HexString(

@@ -25,7 +25,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
     public void CorrectCellsCount()
     {
         Assert.Equal(
-            289,
+            204,
             new SchemaProjection(new RelationalSchemaSchema())
                 .SelectMany(x =>
                     x.SelectMany(c => c.Cells.Values.Select(v => v.Value)).ToArray()
@@ -48,7 +48,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
                 new SchemaProjection(new RelationalSchemaSchema())
             );
 
-        Assert.Equal(98, schemaDataSet.SelectMany(x => x.Value).Count());
+        Assert.Equal(90, schemaDataSet.SelectMany(x => x.Value).Count());
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
         );
 
         IStoredSchemaDataSet aggregated = Enumerable
-            .Range(0, 5)
+            .Range(0, Random.Shared.Next(5, 10))
             .Aggregate(
                 new PostgreSqlStoredSchemaDataSetWithInsertedRows(
                     new PostgreSqlStoredSchemaDataSet(
@@ -76,7 +76,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
                     )
             );
 
-        Assert.Equal(398, aggregated.SelectMany(x => x.Value).Count());
+        Assert.Equal(90, aggregated.SelectMany(x => x.Value).Count());
     }
 
     [Fact]

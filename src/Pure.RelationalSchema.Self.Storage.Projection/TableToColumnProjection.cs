@@ -40,10 +40,6 @@ internal sealed record TableToColumnProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new GuidColumn(),
-                        new Cell(new String(new Ulid(Guid.CreateVersion7())))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
                         new ReferenceToColumnColumn(),
                         new Cell(
                             new HexString(
