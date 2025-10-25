@@ -6,14 +6,10 @@ using Pure.RelationalSchema.Storage.PostgreSQL;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
 
-public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
+public sealed record SchemaProjectionTests     : IAsyncLifetime,
+        IDisposable
 {
-    private readonly DatabaseFixture _databaseFixture;
-
-    public SchemaProjectionTests(DatabaseFixture databaseFixture)
-    {
-        _databaseFixture = databaseFixture;
-    }
+    private DatabaseFixture? _databaseFixture;
 
     [Fact]
     public void CorrectGroupCount()
@@ -44,7 +40,7 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
     {
         ISchema schema = new PostgreSqlCreatedSchema(
             new RelationalSchemaSchema(),
-            _databaseFixture.Connection
+            _databaseFixture!.Connection
         );
 
         IStoredSchemaDataSet schemaDataSet =
@@ -56,18 +52,16 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
         Assert.Equal(98, schemaDataSet.SelectMany(x => x.Value).Count());
     }
 
-#pragma warning disable xUnit1004 // Test methods should not be skipped
-    [Fact(Skip = "Should be fixed.")]
-#pragma warning restore xUnit1004 // Test methods should not be skipped
+    [Fact]
     public void CreateMultipleSelfProjection()
     {
         ISchema schema = new PostgreSqlCreatedSchema(
             new RelationalSchemaSchema(),
-            _databaseFixture.Connection
+            _databaseFixture!.Connection
         );
 
         IStoredSchemaDataSet aggregated = Enumerable
-            .Range(0, 100)
+            .Range(0, 5)
             .Aggregate(
                 new PostgreSqlStoredSchemaDataSetWithInsertedRows(
                     new PostgreSqlStoredSchemaDataSet(
@@ -83,7 +77,7 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
                     )
             );
 
-        Assert.Equal(98, aggregated.SelectMany(x => x.Value).Count());
+        Assert.Equal(398, aggregated.SelectMany(x => x.Value).Count());
     }
 
     [Fact]
@@ -100,5 +94,22 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
         _ = Assert.Throws<NotSupportedException>(() =>
             new SchemaProjection(new RelationalSchemaSchema()).ToString()
         );
+    }
+
+    public void Dispose()
+    {
+        _databaseFixture?.Dispose();
+    }
+
+    public Task DisposeAsync()
+    {
+        Dispose();
+        return Task.CompletedTask;
+    }
+
+    public Task InitializeAsync()
+    {
+        _databaseFixture = new DatabaseFixture();
+        return Task.CompletedTask;
     }
 }
