@@ -115,7 +115,7 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
         yield return new Grouping(
             new SchemasToForeignKeysTable(),
             _schema
-                .ForeignKeys.Select(table => (_schema, table))
+                .ForeignKeys.Select(foreignKey => (_schema, foreignKey))
                 .Select(x => new SchemaToForeignKeysProjection(x))
         );
     }
