@@ -1,5 +1,6 @@
 using System.Data;
 using Pure.RelationalSchema.Abstractions.Schema;
+using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema;
 using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.PostgreSQL;
@@ -14,7 +15,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
     public void CorrectGroupCount()
     {
         Assert.Equal(
-            9,
+            13,
             new SchemaProjection(new RelationalSchemaSchema())
                 .Select(x => x.ToArray())
                 .Count()
@@ -25,7 +26,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
     public void CorrectCellsCount()
     {
         Assert.Equal(
-            204,
+            288,
             new SchemaProjection(new RelationalSchemaSchema())
                 .SelectMany(x =>
                     x.SelectMany(c => c.Cells.Values.Select(v => v.Value)).ToArray()
@@ -48,7 +49,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
                 new SchemaProjection(new RelationalSchemaSchema())
             );
 
-        Assert.Equal(90, schemaDataSet.SelectMany(x => x.Value).Count());
+        Assert.Equal(125, schemaDataSet.SelectMany(x => x.Value).Count());
     }
 
     [Fact]
@@ -76,7 +77,13 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
                     )
             );
 
-        Assert.Equal(90, aggregated.SelectMany(x => x.Value).Count());
+        Assert.Equal(125, aggregated.SelectMany(x => x.Value).Count());
+
+        ISchema a = new SchemasFromRows(aggregated).Single();
+
+        Assert.True(
+            new SchemaHash(a).SequenceEqual(new SchemaHash(new RelationalSchemaSchema()))
+        );
     }
 
     [Fact]

@@ -18,147 +18,106 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
 
     public IEnumerator<IGrouping<ITable, IRow>> GetEnumerator()
     {
-        IReadOnlyCollection<IRow> columnTypesRows =
-        [
-            .. _schema
+        yield return new Grouping(
+            new ColumnTypesTable(),
+            _schema
                 .Tables.SelectMany(x => x.Columns.Select(c => c.Type))
-                .Select(x => new ColumnTypeProjection(x)),
-        ];
+                .Select(x => new ColumnTypeProjection(x))
+        );
 
-        if (columnTypesRows.Count != 0)
-        {
-            yield return new Grouping(new ColumnTypesTable(), columnTypesRows);
-        }
-
-        IReadOnlyCollection<IRow> columnsRows =
-        [
-            .. _schema
+        yield return new Grouping(
+            new ColumnsTable(),
+            _schema
                 .Tables.SelectMany(x => x.Columns)
                 .Prepend(new RowDeterminedHashColumn())
-                .Select(x => new ColumnProjection(x)),
-        ];
+                .Select(x => new ColumnProjection(x))
+        );
 
-        if (columnsRows.Count != 0)
-        {
-            yield return new Grouping(new ColumnsTable(), columnsRows);
-        }
+        yield return new Grouping(
+            new TablesTable(),
+            _schema.Tables.Select(x => new TableProjection(x))
+        );
 
-        IReadOnlyCollection<IRow> tablesRows =
-        [
-            .. _schema.Tables.Select(x => new TableProjection(x)),
-        ];
-
-        if (tablesRows.Count != 0)
-        {
-            yield return new Grouping(new TablesTable(), tablesRows);
-        }
-
-        IReadOnlyCollection<IRow> tablesToColumnsRows =
-        [
-            .. _schema
+        yield return new Grouping(
+            new TablesToColumnsTable(),
+            _schema
                 .Tables.SelectMany(
                     table => table.Columns,
                     (table, column) => (table, column)
                 )
-                .Select(x => new TableToColumnProjection(x)),
-        ];
+                .Select(x => new TableToColumnProjection(x))
+        );
 
-        if (tablesToColumnsRows.Count != 0)
-        {
-            yield return new Grouping(new TablesToColumnsTable(), tablesToColumnsRows);
-        }
+        yield return new Grouping(
+            new IndexesTable(),
+            _schema.Tables.SelectMany(x => x.Indexes).Select(x => new IndexProjection(x))
+        );
 
-        IReadOnlyCollection<IRow> indexesRows =
-        [
-            .. _schema
-                .Tables.SelectMany(x => x.Indexes)
-                .Select(x => new IndexProjection(x)),
-        ];
+        yield return new Grouping(
+            new IndexesToColumnsTable(),
+            _schema
+                .Tables.SelectMany(table =>
+                    table.Indexes.SelectMany(
+                        index => table.Columns,
+                        (index, column) => (index, column)
+                    )
+                )
+                .Select(x => new IndexToColumnsProjection(x))
+        );
 
-        if (indexesRows.Count != 0)
-        {
-            yield return new Grouping(new IndexesTable(), indexesRows);
-        }
-
-        IReadOnlyCollection<IRow> tablesToIndexesRows =
-        [
-            .. _schema
+        yield return new Grouping(
+            new TablesToIndexesTable(),
+            _schema
                 .Tables.SelectMany(
                     table => table.Indexes,
                     (table, index) => (table, index)
                 )
-                .Select(x => new TableToIndexProjection(x)),
-        ];
+                .Select(x => new TableToIndexProjection(x))
+        );
 
-        if (tablesToIndexesRows.Count != 0)
-        {
-            yield return new Grouping(new TablesToIndexesTable(), tablesToIndexesRows);
-        }
+        yield return new Grouping(
+            new ForeignKeysTable(),
+            _schema.ForeignKeys.Select(x => new ForeignKeyProjection(x))
+        );
 
-        IReadOnlyCollection<IRow> foreignKeysRows =
-        [
-            .. _schema.ForeignKeys.Select(x => new ForeignKeyProjection(x)),
-        ];
-
-        if (foreignKeysRows.Count != 0)
-        {
-            yield return new Grouping(new ForeignKeysTable(), foreignKeysRows);
-        }
-
-        IReadOnlyCollection<IRow> foreignKeysToReferencingColumnsRows =
-        [
-            .. _schema
+        yield return new Grouping(
+            new ForeignKeysToReferencingColumnsTable(),
+            _schema
                 .ForeignKeys.SelectMany(
                     fk => fk.ReferencingColumns,
                     (fk, col) => (fk, col)
                 )
-                .Select(x => new ForeignKeyToReferencingColumnProjection(x)),
-        ];
+                .Select(x => new ForeignKeyToReferencingColumnProjection(x))
+        );
 
-        if (foreignKeysToReferencingColumnsRows.Count != 0)
-        {
-            yield return new Grouping(
-                new ForeignKeysToReferencingColumnsTable(),
-                foreignKeysToReferencingColumnsRows
-            );
-        }
-
-        IReadOnlyCollection<IRow> foreignKeysToReferencedColumnsRows =
-        [
-            .. _schema
+        yield return new Grouping(
+            new ForeignKeysToReferencedColumnsTable(),
+            _schema
                 .ForeignKeys.SelectMany(
                     fk => fk.ReferencedColumns,
                     (fk, col) => (fk, col)
                 )
-                .Select(x => new ForeignKeyToReferencingColumnProjection(x)),
-        ];
+                .Select(x => new ForeignKeyToReferencingColumnProjection(x))
+        );
 
-        if (foreignKeysToReferencedColumnsRows.Count != 0)
-        {
-            yield return new Grouping(
-                new ForeignKeysToReferencedColumnsTable(),
-                foreignKeysToReferencedColumnsRows
-            );
-        }
+        yield return new Grouping(
+            new SchemasTable(),
+            [new SchemaEntityProjection(_schema)]
+        );
 
-        IReadOnlyCollection<IRow> schemaRows = [new SchemaEntityProjection(_schema)];
-
-        if (schemaRows.Count != 0)
-        {
-            yield return new Grouping(new SchemasTable(), schemaRows);
-        }
-
-        IReadOnlyCollection<IRow> schemasToTablesRows =
-        [
-            .. _schema
+        yield return new Grouping(
+            new SchemasToTablesTable(),
+            _schema
                 .Tables.Select(table => (_schema, table))
-                .Select(x => new SchemaToTablesProjection(x)),
-        ];
+                .Select(x => new SchemaToTablesProjection(x))
+        );
 
-        if (schemasToTablesRows.Count != 0)
-        {
-            yield return new Grouping(new SchemasToTablesTable(), schemasToTablesRows);
-        }
+        yield return new Grouping(
+            new SchemasToForeignKeysTable(),
+            _schema
+                .ForeignKeys.Select(table => (_schema, table))
+                .Select(x => new SchemaToForeignKeysProjection(x))
+        );
     }
 
     IEnumerator IEnumerable.GetEnumerator()
