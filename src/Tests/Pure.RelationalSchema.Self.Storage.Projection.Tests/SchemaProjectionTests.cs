@@ -481,6 +481,17 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
+    public void ProduceCorrectForeignKeysRowsCount()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new ForeignKeysTable()))
+        );
+
+        Assert.Equal(schema.ForeignKeys.Count(), projection.Count());
+    }
+
+    [Fact]
     public void CorrectGroupCount()
     {
         Assert.Equal(
