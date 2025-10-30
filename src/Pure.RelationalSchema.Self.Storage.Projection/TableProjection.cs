@@ -43,9 +43,18 @@ internal sealed record TableProjection : IRow
                         new Cell(
                             new HexString(
                                 new DeterminedHash(
-                                    _entity.Columns.Select(x => new RowHash(
-                                        new ColumnProjection(x)
-                                    ))
+                                    [
+                                        new DeterminedHash(
+                                            _entity.Columns.Select(x => new RowHash(
+                                                new ColumnProjection(x)
+                                            ))
+                                        ),
+                                        new DeterminedHash(
+                                            _entity.Indexes.Select(x => new RowHash(
+                                                new IndexProjection(x)
+                                            ))
+                                        ),
+                                    ]
                                 )
                             )
                         )
