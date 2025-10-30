@@ -1,12 +1,15 @@
 using System.Data;
+using Pure.Collections.Generic;
 using Pure.HashCodes;
-using Pure.Primitives.Materialized.String;
-using Pure.Primitives.String.Operations;
+using Pure.RelationalSchema.Abstractions.Column;
+using Pure.RelationalSchema.Abstractions.ColumnType;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema;
+using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
+using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.HashCodes;
 
@@ -34,10 +37,7 @@ public sealed record SchemaProjectionTests
     {
         ISchema schema = new RelationalSchemaSchema();
         Assert.Equal(
-            schema
-                .Tables.SelectMany(x => x.Columns)
-                .Select(x => x.Type)
-                .Count(),
+            schema.Tables.SelectMany(x => x.Columns).Select(x => x.Type).Count(),
             new SchemaProjection(schema)
                 .Single(x =>
                     new TableHash(x.Key).SequenceEqual(
@@ -68,6 +68,42 @@ public sealed record SchemaProjectionTests
                 )
             )
         );
+    }
+
+    [Fact]
+    public void ProduceCorrectCellsInColumnTypesRows()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new ColumnTypesTable()))
+        );
+
+        Assert.True(
+            new DeterminedHash(
+                schema
+                    .Tables.SelectMany(x => x.Columns)
+                    .Select(x => x.Type)
+                    .Select(BuildExpectedRow)
+                    .Select(x => new RowHash(x))
+            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
+        );
+
+        IRow BuildExpectedRow(IColumnType source)
+        {
+            return new Row(
+                new Dictionary<KeyValuePair<IColumn, ICell>, IColumn, ICell>(
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new NameColumn(),
+                            new Cell(source.Name)
+                        ),
+                    ],
+                    x => x.Key,
+                    x => x.Value,
+                    x => new ColumnHash(x)
+                )
+            );
+        }
     }
 
     [Fact]
