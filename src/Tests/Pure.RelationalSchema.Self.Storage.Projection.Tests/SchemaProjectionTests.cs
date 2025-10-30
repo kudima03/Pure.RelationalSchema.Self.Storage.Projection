@@ -2,6 +2,7 @@ using System.Data;
 using Pure.HashCodes;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.Abstractions.Table;
+using Pure.RelationalSchema.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema;
 using Pure.RelationalSchema.Self.Schema.Tables;
@@ -123,6 +124,26 @@ public sealed record SchemaProjectionTests
         );
     }
 
+    [Fact]
+    public void ProduceCorrectCellsInColumnsRows()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new ColumnsTable()))
+        );
+
+        Assert.True(
+            new DeterminedHash(
+                schema
+                    .Tables.SelectMany(x => x.Columns)
+                    .Prepend(new RowDeterminedHashColumn()) //Should contain PK column
+                    .Select(x => new ColumnExpectedRow(x))
+                    .Select(x => new RowHash(x))
+            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
+        );
+    }
+
+    [Fact]
     public void CorrectGroupCount()
     {
         Assert.Equal(
