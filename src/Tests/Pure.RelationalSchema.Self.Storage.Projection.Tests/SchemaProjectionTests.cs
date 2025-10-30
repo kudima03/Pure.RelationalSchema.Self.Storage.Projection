@@ -1,8 +1,12 @@
 using System.Data;
 using Pure.HashCodes;
+using Pure.Primitives.Materialized.String;
+using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema;
+using Pure.RelationalSchema.Self.Schema.Tables;
+using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
 
@@ -20,6 +24,30 @@ public sealed record SchemaProjectionTests
                         .Select(x => new TableHash(x))
                 )
             )
+        );
+    }
+
+    [Fact]
+    public void ProduceCorrectColumnTypesRowsCount()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        Assert.Equal(
+            schema
+                .Tables.SelectMany(x => x.Columns)
+                .Select(x => x.Type)
+                .DistinctBy(x =>
+                    new MaterializedString(new HexString(new ColumnTypeHash(x))).Value
+                )
+                .Count(),
+            new SchemaProjection(schema)
+                .Single(x =>
+                    new TableHash(x.Key).SequenceEqual(
+                        new TableHash(new ColumnTypesTable())
+                    )
+                )
+                .Select(x => new RowHash(x))
+                .DistinctBy(x => new MaterializedString(new HexString(x)).Value)
+                .Count()
         );
     }
 
