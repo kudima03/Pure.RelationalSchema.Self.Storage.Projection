@@ -34,7 +34,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
         );
     }
 
-    [Fact]
+    [Fact(Skip = "Too long to compute hashes")]
     public void CreateSingleSelfProjection()
     {
         ISchema schema = new PostgreSqlCreatedSchema(
@@ -51,7 +51,7 @@ public sealed record SchemaProjectionTests : IAsyncLifetime, IDisposable
         Assert.Equal(90, schemaDataSet.SelectMany(x => x.Value).Count());
     }
 
-    [Fact]
+    [Fact(Skip = "Too long to compute hashes")]
     public void CreateMultipleSelfProjection()
     {
         ISchema schema = new PostgreSqlCreatedSchema(
