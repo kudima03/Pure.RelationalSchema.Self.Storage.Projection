@@ -165,6 +165,22 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
+    public void ProduceCorrectIndexesRowsCount()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new IndexesTable()))
+        );
+
+        Assert.Equal(
+            schema
+                .Tables.SelectMany(x => x.Indexes)
+                .Count(),
+            projection.Count()
+        );
+    }
+
+    [Fact]
     public void CorrectGroupCount()
     {
         Assert.Equal(
