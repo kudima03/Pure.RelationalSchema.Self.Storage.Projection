@@ -173,10 +173,26 @@ public sealed record SchemaProjectionTests
         );
 
         Assert.Equal(
-            schema
-                .Tables.SelectMany(x => x.Indexes)
-                .Count(),
+            schema.Tables.SelectMany(x => x.Indexes).Count(),
             projection.Count()
+        );
+    }
+
+    [Fact]
+    public void ProduceCorrectCellsInIndexesRows()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new IndexesTable()))
+        );
+
+        Assert.True(
+            new DeterminedHash(
+                schema
+                    .Tables.SelectMany(x => x.Indexes)
+                    .Select(x => new IndexExpectedRow(x))
+                    .Select(x => new RowHash(x))
+            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
         );
     }
 
