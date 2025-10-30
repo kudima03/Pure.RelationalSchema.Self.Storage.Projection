@@ -37,9 +37,6 @@ public sealed record SchemaProjectionTests
             schema
                 .Tables.SelectMany(x => x.Columns)
                 .Select(x => x.Type)
-                .DistinctBy(x =>
-                    new MaterializedString(new HexString(new ColumnTypeHash(x))).Value
-                )
                 .Count(),
             new SchemaProjection(schema)
                 .Single(x =>
@@ -48,7 +45,6 @@ public sealed record SchemaProjectionTests
                     )
                 )
                 .Select(x => new RowHash(x))
-                .DistinctBy(x => new MaterializedString(new HexString(x)).Value)
                 .Count()
         );
     }
