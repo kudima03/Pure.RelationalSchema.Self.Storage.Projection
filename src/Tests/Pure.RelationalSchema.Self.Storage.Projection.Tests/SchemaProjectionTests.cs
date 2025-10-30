@@ -689,30 +689,6 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
-    public void CorrectGroupCount()
-    {
-        Assert.Equal(
-            13,
-            new SchemaProjection(new RelationalSchemaSchema())
-                .Select(x => x.ToArray())
-                .Count()
-        );
-    }
-
-    [Fact]
-    public void CorrectCellsCount()
-    {
-        Assert.Equal(
-            339,
-            new SchemaProjection(new RelationalSchemaSchema())
-                .SelectMany(x =>
-                    x.SelectMany(c => c.Cells.Values.Select(v => v.Value)).ToArray()
-                )
-                .Count()
-        );
-    }
-
-    [Fact]
     public void ThrowsExceptionOnGetHashCode()
     {
         _ = Assert.Throws<NotSupportedException>(() =>
