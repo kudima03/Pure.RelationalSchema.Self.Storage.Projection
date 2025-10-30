@@ -232,6 +232,29 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
+    public void ProduceCorrectCellsInIndexesToColumnsRows()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new IndexesToColumnsTable()))
+        );
+
+        Assert.True(
+            new DeterminedHash(
+                schema
+                    .Tables.SelectMany(table =>
+                        table.Indexes.SelectMany(
+                            index => table.Columns,
+                            (index, column) => (index, column)
+                        )
+                    )
+                    .Select(x => new IndexToColumnExpectedRow(x))
+                    .Select(x => new RowHash(x))
+            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
+        );
+    }
+
+    [Fact]
     public void CorrectGroupCount()
     {
         Assert.Equal(
