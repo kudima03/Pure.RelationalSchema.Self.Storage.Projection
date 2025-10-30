@@ -1,4 +1,6 @@
 using Pure.Collections.Generic;
+using Pure.HashCodes;
+using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.HashCodes;
@@ -6,6 +8,7 @@ using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -34,6 +37,26 @@ internal sealed record SchemaEntityProjection : IRow
                     new KeyValuePair<IColumn, ICell>(
                         new NameColumn(),
                         new Cell(_entity.Name)
+                    ),                    new KeyValuePair<IColumn, ICell>(
+                        new CompositionHashColumn(),
+                        new Cell(
+                            new HexString(
+                                new DeterminedHash(
+                                    [
+                                        new DeterminedHash(
+                                            _entity.Tables.Select(x => new RowHash(
+                                                new TableProjection(x)
+                                            ))
+                                        ),
+                                        new DeterminedHash(
+                                            _entity.ForeignKeys.Select(x => new RowHash(
+                                                new ForeignKeyProjection(x)
+                                            ))
+                                        ),
+                                    ]
+                                )
+                            )
+                        )
                     ),
                 ],
                 column => new ColumnHash(column)
