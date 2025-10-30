@@ -3,9 +3,11 @@ using Pure.HashCodes;
 using Pure.Primitives.Materialized.String;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Schema;
+using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema;
 using Pure.RelationalSchema.Self.Schema.Tables;
+using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
@@ -48,6 +50,27 @@ public sealed record SchemaProjectionTests
                 .Select(x => new RowHash(x))
                 .DistinctBy(x => new MaterializedString(new HexString(x)).Value)
                 .Count()
+        );
+    }
+
+    [Fact]
+    public void ProduceCorrectColumnsInColumnTypesRows()
+    {
+        ISchema schema = new RelationalSchemaSchema();
+        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new ColumnTypesTable()))
+        );
+
+        Assert.True(
+            projection.All(row =>
+                new DeterminedHash(
+                    row.Cells.Keys.Select(column => new ColumnHash(column))
+                ).SequenceEqual(
+                    new DeterminedHash(
+                        projection.Key.Columns.Select(column => new ColumnHash(column))
+                    )
+                )
+            )
         );
     }
 
