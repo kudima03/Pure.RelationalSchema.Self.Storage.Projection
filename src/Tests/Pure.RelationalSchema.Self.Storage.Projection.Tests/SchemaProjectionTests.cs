@@ -9,7 +9,7 @@ public sealed record SchemaProjectionTests
     public void CorrectGroupCount()
     {
         Assert.Equal(
-            9,
+            13,
             new SchemaProjection(new RelationalSchemaSchema())
                 .Select(x => x.ToArray())
                 .Count()

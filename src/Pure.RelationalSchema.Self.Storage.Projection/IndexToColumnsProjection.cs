@@ -1,8 +1,7 @@
 using Pure.Collections.Generic;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.Schema;
-using Pure.RelationalSchema.Abstractions.Table;
+using Pure.RelationalSchema.Abstractions.Index;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
@@ -12,17 +11,17 @@ using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
-internal sealed record SchemaToTablesProjection : IRow
+internal sealed record IndexToColumnsProjection : IRow
 {
-    private readonly (ISchema schema, ITable table) _entity;
+    private readonly (IIndex index, IColumn column) _entity;
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public SchemaToTablesProjection((ISchema schema, ITable table) entity)
-        : this(entity, new SchemasToTablesTable().Columns) { }
+    public IndexToColumnsProjection((IIndex index, IColumn column) entity)
+        : this(entity, new IndexesToColumnsTable().Columns) { }
 
-    public SchemaToTablesProjection(
-        (ISchema schema, ITable table) entity,
+    public IndexToColumnsProjection(
+        (IIndex index, IColumn column) entity,
         IEnumerable<IColumn> columns
     )
     {
@@ -38,17 +37,17 @@ internal sealed record SchemaToTablesProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToSchemaColumn(),
+                        new ReferenceToIndexColumn(),
                         new Cell(
-                            new HexString(
-                                new RowHash(new SchemaEntityProjection(_entity.schema))
-                            )
+                            new HexString(new RowHash(new IndexProjection(_entity.index)))
                         )
                     ),
                     new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToTableColumn(),
+                        new ReferenceToColumnColumn(),
                         new Cell(
-                            new HexString(new RowHash(new TableProjection(_entity.table)))
+                            new HexString(
+                                new RowHash(new ColumnProjection(_entity.column))
+                            )
                         )
                     ),
                 ],

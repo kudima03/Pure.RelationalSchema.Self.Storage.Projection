@@ -1,8 +1,8 @@
 using Pure.Collections.Generic;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
+using Pure.RelationalSchema.Abstractions.ForeignKey;
 using Pure.RelationalSchema.Abstractions.Schema;
-using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
@@ -12,17 +12,17 @@ using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
-internal sealed record SchemaToTablesProjection : IRow
+internal sealed record SchemaToForeignKeysProjection : IRow
 {
-    private readonly (ISchema schema, ITable table) _entity;
+    private readonly (ISchema schema, IForeignKey foreignKey) _entity;
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public SchemaToTablesProjection((ISchema schema, ITable table) entity)
-        : this(entity, new SchemasToTablesTable().Columns) { }
+    public SchemaToForeignKeysProjection((ISchema schema, IForeignKey foreignKey) entity)
+        : this(entity, new SchemasToForeignKeysTable().Columns) { }
 
-    public SchemaToTablesProjection(
-        (ISchema schema, ITable table) entity,
+    public SchemaToForeignKeysProjection(
+        (ISchema schema, IForeignKey foreignKey) entity,
         IEnumerable<IColumn> columns
     )
     {
@@ -46,9 +46,11 @@ internal sealed record SchemaToTablesProjection : IRow
                         )
                     ),
                     new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToTableColumn(),
+                        new ReferenceToForeignKeyColumn(),
                         new Cell(
-                            new HexString(new RowHash(new TableProjection(_entity.table)))
+                            new HexString(
+                                new RowHash(new ForeignKeyProjection(_entity.foreignKey))
+                            )
                         )
                     ),
                 ],
