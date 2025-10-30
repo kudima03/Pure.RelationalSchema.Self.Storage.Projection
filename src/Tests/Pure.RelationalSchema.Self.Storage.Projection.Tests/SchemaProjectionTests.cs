@@ -1,15 +1,11 @@
 using System.Data;
-using Pure.Collections.Generic;
 using Pure.HashCodes;
-using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.ColumnType;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema;
-using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
-using Pure.RelationalSchema.Storage;
+using Pure.RelationalSchema.Self.Storage.Projection.Tests.Models;
 using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.HashCodes;
 
@@ -83,27 +79,10 @@ public sealed record SchemaProjectionTests
                 schema
                     .Tables.SelectMany(x => x.Columns)
                     .Select(x => x.Type)
-                    .Select(BuildExpectedRow)
+                    .Select(x => new ColumnTypeExpectedRow(x))
                     .Select(x => new RowHash(x))
             ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
         );
-
-        IRow BuildExpectedRow(IColumnType source)
-        {
-            return new Row(
-                new Dictionary<KeyValuePair<IColumn, ICell>, IColumn, ICell>(
-                    [
-                        new KeyValuePair<IColumn, ICell>(
-                            new NameColumn(),
-                            new Cell(source.Name)
-                        ),
-                    ],
-                    x => x.Key,
-                    x => x.Value,
-                    x => new ColumnHash(x)
-                )
-            );
-        }
     }
 
     [Fact]
