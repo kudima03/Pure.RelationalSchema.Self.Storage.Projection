@@ -49,7 +49,8 @@ internal sealed record ForeignKeyProjection : IRow
                                 new RowHash(new TableProjection(_entity.ReferencedTable))
                             )
                         )
-                    ),                    new KeyValuePair<IColumn, ICell>(
+                    ),
+                    new KeyValuePair<IColumn, ICell>(
                         new CompositionHashColumn(),
                         new Cell(
                             new HexString(

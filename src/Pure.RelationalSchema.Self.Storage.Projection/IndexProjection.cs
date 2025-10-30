@@ -39,7 +39,7 @@ internal sealed record IndexProjection : IRow
                         new IsUniqueColumn(),
                         new Cell(new String(_entity.IsUnique))
                     ),
-                                        new KeyValuePair<IColumn, ICell>(
+                    new KeyValuePair<IColumn, ICell>(
                         new CompositionHashColumn(),
                         new Cell(
                             new HexString(

@@ -37,7 +37,8 @@ internal sealed record TableProjection : IRow
                     new KeyValuePair<IColumn, ICell>(
                         new NameColumn(),
                         new Cell(_entity.Name)
-                    ),                    new KeyValuePair<IColumn, ICell>(
+                    ),
+                    new KeyValuePair<IColumn, ICell>(
                         new CompositionHashColumn(),
                         new Cell(
                             new HexString(
