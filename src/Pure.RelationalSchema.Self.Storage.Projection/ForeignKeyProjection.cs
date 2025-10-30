@@ -1,4 +1,5 @@
 using Pure.Collections.Generic;
+using Pure.HashCodes;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.ForeignKey;
@@ -46,6 +47,27 @@ internal sealed record ForeignKeyProjection : IRow
                         new Cell(
                             new HexString(
                                 new RowHash(new TableProjection(_entity.ReferencedTable))
+                            )
+                        )
+                    ),
+                    new KeyValuePair<IColumn, ICell>(
+                        new CompositionHashColumn(),
+                        new Cell(
+                            new HexString(
+                                new DeterminedHash(
+                                    [
+                                        new DeterminedHash(
+                                            _entity.ReferencingColumns.Select(
+                                                x => new RowHash(new ColumnProjection(x))
+                                            )
+                                        ),
+                                        new DeterminedHash(
+                                            _entity.ReferencedColumns.Select(
+                                                x => new RowHash(new ColumnProjection(x))
+                                            )
+                                        ),
+                                    ]
+                                )
                             )
                         )
                     ),

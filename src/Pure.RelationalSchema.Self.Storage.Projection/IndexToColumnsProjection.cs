@@ -1,5 +1,4 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.Index;
@@ -9,20 +8,22 @@ using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.HashCodes;
-using String = Pure.Primitives.String.String;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
-internal sealed record IndexProjection : IRow
+internal sealed record IndexToColumnsProjection : IRow
 {
-    private readonly IIndex _entity;
+    private readonly (IIndex index, IColumn column) _entity;
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public IndexProjection(IIndex entity)
-        : this(entity, new IndexesTable().Columns) { }
+    public IndexToColumnsProjection((IIndex index, IColumn column) entity)
+        : this(entity, new IndexesToColumnsTable().Columns) { }
 
-    public IndexProjection(IIndex entity, IEnumerable<IColumn> columns)
+    public IndexToColumnsProjection(
+        (IIndex index, IColumn column) entity,
+        IEnumerable<IColumn> columns
+    )
     {
         _entity = entity;
         _columns = columns;
@@ -36,23 +37,21 @@ internal sealed record IndexProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new IsUniqueColumn(),
-                        new Cell(new String(_entity.IsUnique))
+                        new ReferenceToIndexColumn(),
+                        new Cell(
+                            new HexString(new RowHash(new IndexProjection(_entity.index)))
+                        )
                     ),
                     new KeyValuePair<IColumn, ICell>(
-                        new CompositionHashColumn(),
+                        new ReferenceToColumnColumn(),
                         new Cell(
                             new HexString(
-                                new DeterminedHash(
-                                    _entity.Columns.Select(x => new RowHash(
-                                        new ColumnProjection(x)
-                                    ))
-                                )
+                                new RowHash(new ColumnProjection(_entity.column))
                             )
                         )
                     ),
                 ],
-                x => new ColumnHash(x)
+                column => new ColumnHash(column)
             ),
             column => new ColumnHash(column)
         );

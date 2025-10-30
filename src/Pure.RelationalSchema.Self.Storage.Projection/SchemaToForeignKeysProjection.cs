@@ -1,7 +1,7 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
+using Pure.RelationalSchema.Abstractions.ForeignKey;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
@@ -12,16 +12,19 @@ using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
-internal sealed record SchemaEntityProjection : IRow
+internal sealed record SchemaToForeignKeysProjection : IRow
 {
-    private readonly ISchema _entity;
+    private readonly (ISchema schema, IForeignKey foreignKey) _entity;
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public SchemaEntityProjection(ISchema entity)
-        : this(entity, new SchemasTable().Columns) { }
+    public SchemaToForeignKeysProjection((ISchema schema, IForeignKey foreignKey) entity)
+        : this(entity, new SchemasToForeignKeysTable().Columns) { }
 
-    public SchemaEntityProjection(ISchema entity, IEnumerable<IColumn> columns)
+    public SchemaToForeignKeysProjection(
+        (ISchema schema, IForeignKey foreignKey) entity,
+        IEnumerable<IColumn> columns
+    )
     {
         _entity = entity;
         _columns = columns;
@@ -35,27 +38,18 @@ internal sealed record SchemaEntityProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new NameColumn(),
-                        new Cell(_entity.Name)
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new CompositionHashColumn(),
+                        new ReferenceToSchemaColumn(),
                         new Cell(
                             new HexString(
-                                new DeterminedHash(
-                                    [
-                                        new DeterminedHash(
-                                            _entity.Tables.Select(x => new RowHash(
-                                                new TableProjection(x)
-                                            ))
-                                        ),
-                                        new DeterminedHash(
-                                            _entity.ForeignKeys.Select(x => new RowHash(
-                                                new ForeignKeyProjection(x)
-                                            ))
-                                        ),
-                                    ]
-                                )
+                                new RowHash(new SchemaEntityProjection(_entity.schema))
+                            )
+                        )
+                    ),
+                    new KeyValuePair<IColumn, ICell>(
+                        new ReferenceToForeignKeyColumn(),
+                        new Cell(
+                            new HexString(
+                                new RowHash(new ForeignKeyProjection(_entity.foreignKey))
                             )
                         )
                     ),

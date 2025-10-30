@@ -38,7 +38,7 @@ internal sealed record SchemaToTablesProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToTableColumn(),
+                        new ReferenceToSchemaColumn(),
                         new Cell(
                             new HexString(
                                 new RowHash(new SchemaEntityProjection(_entity.schema))
@@ -46,7 +46,7 @@ internal sealed record SchemaToTablesProjection : IRow
                         )
                     ),
                     new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToSchemaColumn(),
+                        new ReferenceToTableColumn(),
                         new Cell(
                             new HexString(new RowHash(new TableProjection(_entity.table)))
                         )
