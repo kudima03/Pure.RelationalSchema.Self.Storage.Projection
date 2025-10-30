@@ -6,6 +6,7 @@ using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests.Models;
 
@@ -23,11 +24,15 @@ public sealed record IndexToColumnExpectedRow : IRow
             [
                 new KeyValuePair<IColumn, ICell>(
                     new ReferenceToColumnColumn(),
-                    new Cell(new HexString(new ColumnHash(_source.column)))
+                    new Cell(
+                        new HexString(new RowHash(new ColumnExpectedRow(_source.column)))
+                    )
                 ),
                 new KeyValuePair<IColumn, ICell>(
                     new ReferenceToIndexColumn(),
-                    new Cell(new HexString(new IndexHash(_source.index)))
+                    new Cell(
+                        new HexString(new RowHash(new IndexExpectedRow(_source.index)))
+                    )
                 ),
             ],
             x => x.Key,
