@@ -40,12 +40,7 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
 
         yield return new Grouping(
             new TablesToColumnsTable(),
-            _schema
-                .Tables.SelectMany(
-                    table => table.Columns,
-                    (table, column) => (table, column)
-                )
-                .Select(x => new TableToColumnProjection(x))
+            _schema.Tables.SelectMany(x => new TablesToColumnsProjections(x))
         );
 
         yield return new Grouping(
@@ -55,24 +50,14 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
 
         yield return new Grouping(
             new IndexesToColumnsTable(),
-            _schema
-                .Tables.SelectMany(table =>
-                    table.Indexes.SelectMany(
-                        index => table.Columns,
-                        (index, column) => (index, column)
-                    )
-                )
-                .Select(x => new IndexToColumnsProjection(x))
+            _schema.Tables.SelectMany(table =>
+                table.Indexes.SelectMany(x => new IndexesToColumnsProjections(x))
+            )
         );
 
         yield return new Grouping(
             new TablesToIndexesTable(),
-            _schema
-                .Tables.SelectMany(
-                    table => table.Indexes,
-                    (table, index) => (table, index)
-                )
-                .Select(x => new TableToIndexProjection(x))
+            _schema.Tables.SelectMany(x => new TablesToIndexesProjections(x))
         );
 
         yield return new Grouping(
@@ -82,22 +67,16 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
 
         yield return new Grouping(
             new ForeignKeysToReferencingColumnsTable(),
-            _schema
-                .ForeignKeys.SelectMany(
-                    fk => fk.ReferencingColumns,
-                    (fk, col) => (fk, col)
-                )
-                .Select(x => new ForeignKeyToReferencingColumnProjection(x))
+            _schema.ForeignKeys.SelectMany(
+                fk => new ForeignKeysToReferencingColumnsProjections(fk)
+            )
         );
 
         yield return new Grouping(
             new ForeignKeysToReferencedColumnsTable(),
-            _schema
-                .ForeignKeys.SelectMany(
-                    fk => fk.ReferencedColumns,
-                    (fk, col) => (fk, col)
-                )
-                .Select(x => new ForeignKeyToReferencingColumnProjection(x))
+            _schema.ForeignKeys.SelectMany(
+                fk => new ForeignKeysToReferencedColumnsProjections(fk)
+            )
         );
 
         yield return new Grouping(
@@ -107,16 +86,12 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
 
         yield return new Grouping(
             new SchemasToTablesTable(),
-            _schema
-                .Tables.Select(table => (_schema, table))
-                .Select(x => new SchemaToTablesProjection(x))
+            new SchemasToTablesProjections(_schema)
         );
 
         yield return new Grouping(
             new SchemasToForeignKeysTable(),
-            _schema
-                .ForeignKeys.Select(foreignKey => (_schema, foreignKey))
-                .Select(x => new SchemaToForeignKeysProjection(x))
+            new SchemaToForeignKeysProjections(_schema)
         );
     }
 

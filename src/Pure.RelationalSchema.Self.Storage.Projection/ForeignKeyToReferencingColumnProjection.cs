@@ -1,33 +1,30 @@
 using Pure.Collections.Generic;
+using Pure.HashCodes;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.ForeignKey;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
-using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record ForeignKeyToReferencingColumnProjection : IRow
 {
-    private readonly (IForeignKey foreignKey, IColumn column) _entity;
+    private readonly IDeterminedHash _foreignKeyHash;
+
+    private readonly IDeterminedHash _columnHash;
 
     private readonly IEnumerable<IColumn> _columns;
 
     public ForeignKeyToReferencingColumnProjection(
-        (IForeignKey foreignKey, IColumn column) entity
-    )
-        : this(entity, new ForeignKeysToReferencingColumnsTable().Columns) { }
-
-    public ForeignKeyToReferencingColumnProjection(
-        (IForeignKey foreignKey, IColumn column) entity,
+        IDeterminedHash foreignKeyHash,
+        IDeterminedHash columnHash,
         IEnumerable<IColumn> columns
     )
     {
-        _entity = entity;
+        _foreignKeyHash = foreignKeyHash;
+        _columnHash = columnHash;
         _columns = columns;
     }
 
@@ -40,19 +37,11 @@ internal sealed record ForeignKeyToReferencingColumnProjection : IRow
                 [
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToColumnColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new ColumnProjection(_entity.column))
-                            )
-                        )
+                        new Cell(new HexString(_columnHash))
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToForeignKeyColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new ForeignKeyProjection(_entity.foreignKey))
-                            )
-                        )
+                        new Cell(new HexString(_foreignKeyHash))
                     ),
                 ],
                 x => new ColumnHash(x)

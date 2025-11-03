@@ -1,4 +1,5 @@
 using Pure.Collections.Generic;
+using Pure.HashCodes;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.ForeignKey;
@@ -14,7 +15,9 @@ namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record SchemaToForeignKeysProjection : IRow
 {
-    private readonly (ISchema schema, IForeignKey foreignKey) _entity;
+    private readonly IDeterminedHash _schemaHash;
+
+    private readonly IDeterminedHash _foreignKeyHash;
 
     private readonly IEnumerable<IColumn> _columns;
 
@@ -25,8 +28,21 @@ internal sealed record SchemaToForeignKeysProjection : IRow
         (ISchema schema, IForeignKey foreignKey) entity,
         IEnumerable<IColumn> columns
     )
+        : this(
+            new RowHash(new SchemaEntityProjection(entity.schema)),
+            new RowHash(new ForeignKeyProjection(entity.foreignKey)),
+            columns
+        )
+    { }
+
+    public SchemaToForeignKeysProjection(
+        IDeterminedHash schemaHash,
+        IDeterminedHash foreignKeyHash,
+        IEnumerable<IColumn> columns
+    )
     {
-        _entity = entity;
+        _schemaHash = schemaHash;
+        _foreignKeyHash = foreignKeyHash;
         _columns = columns;
     }
 
@@ -39,19 +55,11 @@ internal sealed record SchemaToForeignKeysProjection : IRow
                 [
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToSchemaColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new SchemaEntityProjection(_entity.schema))
-                            )
-                        )
+                        new Cell(new HexString(_schemaHash))
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToForeignKeyColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new ForeignKeyProjection(_entity.foreignKey))
-                            )
-                        )
+                        new Cell(new HexString(_foreignKeyHash))
                     ),
                 ],
                 column => new ColumnHash(column)

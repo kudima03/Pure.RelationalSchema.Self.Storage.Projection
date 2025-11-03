@@ -1,31 +1,30 @@
 using Pure.Collections.Generic;
+using Pure.HashCodes;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.Index;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
-using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record IndexToColumnsProjection : IRow
 {
-    private readonly (IIndex index, IColumn column) _entity;
+    private readonly IDeterminedHash _indexHash;
+
+    private readonly IDeterminedHash _columnHash;
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public IndexToColumnsProjection((IIndex index, IColumn column) entity)
-        : this(entity, new IndexesToColumnsTable().Columns) { }
-
     public IndexToColumnsProjection(
-        (IIndex index, IColumn column) entity,
+        IDeterminedHash indexHash,
+        IDeterminedHash columnHash,
         IEnumerable<IColumn> columns
     )
     {
-        _entity = entity;
+        _indexHash = indexHash;
+        _columnHash = columnHash;
         _columns = columns;
     }
 
@@ -38,17 +37,11 @@ internal sealed record IndexToColumnsProjection : IRow
                 [
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToIndexColumn(),
-                        new Cell(
-                            new HexString(new RowHash(new IndexProjection(_entity.index)))
-                        )
+                        new Cell(new HexString(_indexHash))
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToColumnColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new ColumnProjection(_entity.column))
-                            )
-                        )
+                        new Cell(new HexString(_columnHash))
                     ),
                 ],
                 column => new ColumnHash(column)
