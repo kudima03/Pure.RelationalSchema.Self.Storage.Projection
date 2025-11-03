@@ -1,32 +1,30 @@
 using Pure.Collections.Generic;
+using Pure.HashCodes;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.Schema;
-using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
-using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record SchemaToTablesProjection : IRow
 {
-    private readonly (ISchema schema, ITable table) _entity;
+    private readonly IDeterminedHash _schemaHash;
+
+    private readonly IDeterminedHash _tableHash;
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public SchemaToTablesProjection((ISchema schema, ITable table) entity)
-        : this(entity, new SchemasToTablesTable().Columns) { }
-
     public SchemaToTablesProjection(
-        (ISchema schema, ITable table) entity,
+        IDeterminedHash schemaHash,
+        IDeterminedHash tableHash,
         IEnumerable<IColumn> columns
     )
     {
-        _entity = entity;
+        _schemaHash = schemaHash;
+        _tableHash = tableHash;
         _columns = columns;
     }
 
@@ -39,17 +37,11 @@ internal sealed record SchemaToTablesProjection : IRow
                 [
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToSchemaColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new SchemaEntityProjection(_entity.schema))
-                            )
-                        )
+                        new Cell(new HexString(_schemaHash))
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new ReferenceToTableColumn(),
-                        new Cell(
-                            new HexString(new RowHash(new TableProjection(_entity.table)))
-                        )
+                        new Cell(new HexString(_tableHash))
                     ),
                 ],
                 column => new ColumnHash(column)
