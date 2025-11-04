@@ -1,5 +1,5 @@
 using System.Collections;
-using Pure.HashCodes;
+using Pure.HashCodes.Abstractions;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 

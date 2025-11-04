@@ -1,5 +1,5 @@
 using System.Collections;
-using Pure.HashCodes;
+using Pure.HashCodes.Abstractions;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.Self.Schema.Tables;
