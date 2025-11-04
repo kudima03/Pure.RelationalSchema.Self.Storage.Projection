@@ -1,5 +1,5 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes;
+using Pure.HashCodes.Abstractions;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
