@@ -12,7 +12,7 @@ using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
-internal sealed record SchemaEntityProjection : IRow
+public sealed record SchemaEntityProjection : IRow
 {
     private readonly ISchema _entity;
 
