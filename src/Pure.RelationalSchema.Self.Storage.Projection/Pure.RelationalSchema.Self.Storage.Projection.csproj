@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Pure.Collections.Generic" Version="0.1.0-preview.2.0.0" />
     <PackageReference Include="Pure.RelationalSchema.HashCodes" Version="3.1.0" />
-    <PackageReference Include="Pure.RelationalSchema.Self.Schema" Version="0.1.0-preview.4.0.0" />
+    <PackageReference Include="Pure.RelationalSchema.Self.Schema" Version="0.1.0-preview.5.0.0" />
     <PackageReference Include="Pure.RelationalSchema.Storage" Version="0.1.0-preview.6.0.0" />
     <PackageReference
       Include="Pure.RelationalSchema.Storage.HashCodes"
