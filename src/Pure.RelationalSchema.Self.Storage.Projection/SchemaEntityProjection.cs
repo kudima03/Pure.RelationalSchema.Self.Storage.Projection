@@ -1,14 +1,16 @@
 using Pure.Collections.Generic;
 using Pure.HashCodes;
+using Pure.HashCodes.Abstractions;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
+using Pure.RelationalSchema.Abstractions.ForeignKey;
 using Pure.RelationalSchema.Abstractions.Schema;
+using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -18,13 +20,28 @@ public sealed record SchemaEntityProjection : IRow
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public SchemaEntityProjection(ISchema entity)
-        : this(entity, new SchemasTable().Columns) { }
+    private readonly IReadOnlyDictionary<ITable, IDeterminedHash> _tablesCache;
 
-    public SchemaEntityProjection(ISchema entity, IEnumerable<IColumn> columns)
+    private readonly IReadOnlyDictionary<IForeignKey, IDeterminedHash> _foreignKeysCache;
+
+    public SchemaEntityProjection(
+        ISchema entity,
+        IReadOnlyDictionary<ITable, IDeterminedHash> tablesCache,
+        IReadOnlyDictionary<IForeignKey, IDeterminedHash> foreignKeysCache
+    )
+        : this(entity, new SchemasTable().Columns, tablesCache, foreignKeysCache) { }
+
+    public SchemaEntityProjection(
+        ISchema entity,
+        IEnumerable<IColumn> columns,
+        IReadOnlyDictionary<ITable, IDeterminedHash> tablesCache,
+        IReadOnlyDictionary<IForeignKey, IDeterminedHash> foreignKeysCache
+    )
     {
         _entity = entity;
         _columns = columns;
+        _tablesCache = tablesCache;
+        _foreignKeysCache = foreignKeysCache;
     }
 
     public IReadOnlyDictionary<IColumn, ICell> Cells =>
@@ -45,14 +62,12 @@ public sealed record SchemaEntityProjection : IRow
                                 new DeterminedHash(
                                     [
                                         new DeterminedHash(
-                                            _entity.Tables.Select(x => new RowHash(
-                                                new TableProjection(x)
-                                            ))
+                                            _entity.Tables.Select(x => _tablesCache[x])
                                         ),
                                         new DeterminedHash(
-                                            _entity.ForeignKeys.Select(x => new RowHash(
-                                                new ForeignKeyProjection(x)
-                                            ))
+                                            _entity.ForeignKeys.Select(x =>
+                                                _foreignKeysCache[x]
+                                            )
                                         ),
                                     ]
                                 )

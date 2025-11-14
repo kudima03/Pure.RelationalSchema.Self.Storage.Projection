@@ -2,14 +2,10 @@ using Pure.Collections.Generic;
 using Pure.HashCodes.Abstractions;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.ForeignKey;
-using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
-using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -20,20 +16,6 @@ internal sealed record SchemaToForeignKeysProjection : IRow
     private readonly IDeterminedHash _foreignKeyHash;
 
     private readonly IEnumerable<IColumn> _columns;
-
-    public SchemaToForeignKeysProjection((ISchema schema, IForeignKey foreignKey) entity)
-        : this(entity, new SchemasToForeignKeysTable().Columns) { }
-
-    public SchemaToForeignKeysProjection(
-        (ISchema schema, IForeignKey foreignKey) entity,
-        IEnumerable<IColumn> columns
-    )
-        : this(
-            new RowHash(new SchemaEntityProjection(entity.schema)),
-            new RowHash(new ForeignKeyProjection(entity.foreignKey)),
-            columns
-        )
-    { }
 
     public SchemaToForeignKeysProjection(
         IDeterminedHash schemaHash,

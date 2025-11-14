@@ -1,14 +1,15 @@
 using Pure.Collections.Generic;
 using Pure.HashCodes;
+using Pure.HashCodes.Abstractions;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
+using Pure.RelationalSchema.Abstractions.Index;
 using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -18,13 +19,28 @@ internal sealed record TableProjection : IRow
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public TableProjection(ITable entity)
-        : this(entity, new TablesTable().Columns) { }
+    private readonly IReadOnlyDictionary<IColumn, IDeterminedHash> _columnsCache;
 
-    public TableProjection(ITable entity, IEnumerable<IColumn> columns)
+    private readonly IReadOnlyDictionary<IIndex, IDeterminedHash> _indexCache;
+
+    public TableProjection(
+        ITable entity,
+        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache,
+        IReadOnlyDictionary<IIndex, IDeterminedHash> indexCache
+    )
+        : this(entity, new TablesTable().Columns, columnsCache, indexCache) { }
+
+    public TableProjection(
+        ITable entity,
+        IEnumerable<IColumn> columns,
+        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache,
+        IReadOnlyDictionary<IIndex, IDeterminedHash> indexCache
+    )
     {
         _entity = entity;
         _columns = columns;
+        _columnsCache = columnsCache;
+        _indexCache = indexCache;
     }
 
     public IReadOnlyDictionary<IColumn, ICell> Cells =>
@@ -45,14 +61,10 @@ internal sealed record TableProjection : IRow
                                 new DeterminedHash(
                                     [
                                         new DeterminedHash(
-                                            _entity.Columns.Select(x => new RowHash(
-                                                new ColumnProjection(x)
-                                            ))
+                                            _entity.Columns.Select(x => _columnsCache[x])
                                         ),
                                         new DeterminedHash(
-                                            _entity.Indexes.Select(x => new RowHash(
-                                                new IndexProjection(x)
-                                            ))
+                                            _entity.Indexes.Select(x => _indexCache[x])
                                         ),
                                     ]
                                 )
