@@ -4,7 +4,7 @@ using Pure.RelationalSchema.Storage.Abstractions;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
-public sealed record CellSwitch<TSelector> : ICell
+internal sealed record CellSwitch<TSelector> : ICell
 {
     private readonly TSelector _parameter;
 
