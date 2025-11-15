@@ -1,14 +1,15 @@
 using Pure.Collections.Generic;
 using Pure.HashCodes;
+using Pure.HashCodes.Abstractions;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.ForeignKey;
+using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -18,13 +19,28 @@ internal sealed record ForeignKeyProjection : IRow
 
     private readonly IEnumerable<IColumn> _columns;
 
-    public ForeignKeyProjection(IForeignKey entity)
-        : this(entity, new ForeignKeysTable().Columns) { }
+    private readonly IReadOnlyDictionary<ITable, IDeterminedHash> _tablesCache;
 
-    public ForeignKeyProjection(IForeignKey entity, IEnumerable<IColumn> columns)
+    private readonly IReadOnlyDictionary<IColumn, IDeterminedHash> _columnsCache;
+
+    public ForeignKeyProjection(
+        IForeignKey entity,
+        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache,
+        IReadOnlyDictionary<ITable, IDeterminedHash> tablesCache
+    )
+        : this(entity, new ForeignKeysTable().Columns, columnsCache, tablesCache) { }
+
+    public ForeignKeyProjection(
+        IForeignKey entity,
+        IEnumerable<IColumn> columns,
+        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache,
+        IReadOnlyDictionary<ITable, IDeterminedHash> tablesCache
+    )
     {
         _entity = entity;
         _columns = columns;
+        _tablesCache = tablesCache;
+        _columnsCache = columnsCache;
     }
 
     public IReadOnlyDictionary<IColumn, ICell> Cells =>
@@ -36,19 +52,11 @@ internal sealed record ForeignKeyProjection : IRow
                 [
                     new KeyValuePair<IColumn, ICell>(
                         new ReferencingTableColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new TableProjection(_entity.ReferencingTable))
-                            )
-                        )
+                        new Cell(new HexString(_tablesCache[_entity.ReferencingTable]))
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new ReferencedTableColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new TableProjection(_entity.ReferencedTable))
-                            )
-                        )
+                        new Cell(new HexString(_tablesCache[_entity.ReferencedTable]))
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new CompositionHashColumn(),
@@ -57,13 +65,13 @@ internal sealed record ForeignKeyProjection : IRow
                                 new DeterminedHash(
                                     [
                                         new DeterminedHash(
-                                            _entity.ReferencingColumns.Select(
-                                                x => new RowHash(new ColumnProjection(x))
+                                            _entity.ReferencingColumns.Select(x =>
+                                                _columnsCache[x]
                                             )
                                         ),
                                         new DeterminedHash(
-                                            _entity.ReferencedColumns.Select(
-                                                x => new RowHash(new ColumnProjection(x))
+                                            _entity.ReferencedColumns.Select(x =>
+                                                _columnsCache[x]
                                             )
                                         ),
                                     ]
