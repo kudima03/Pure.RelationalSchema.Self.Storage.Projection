@@ -1,5 +1,4 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes;
 using Pure.HashCodes.Abstractions;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
@@ -10,6 +9,8 @@ using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using String = Pure.Primitives.String.String;
+using Ulid = Pure.Primitives.Guid.Ulid;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -51,33 +52,16 @@ internal sealed record ForeignKeyProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
+                        new UuidColumn(),
+                        new Cell(new String(new Ulid()))
+                    ),
+                    new KeyValuePair<IColumn, ICell>(
                         new ReferencingTableColumn(),
                         new Cell(new HexString(_tablesCache[_entity.ReferencingTable]))
                     ),
                     new KeyValuePair<IColumn, ICell>(
                         new ReferencedTableColumn(),
                         new Cell(new HexString(_tablesCache[_entity.ReferencedTable]))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new CompositionHashColumn(),
-                        new Cell(
-                            new HexString(
-                                new DeterminedHash(
-                                    [
-                                        new DeterminedHash(
-                                            _entity.ReferencingColumns.Select(x =>
-                                                _columnsCache[x]
-                                            )
-                                        ),
-                                        new DeterminedHash(
-                                            _entity.ReferencedColumns.Select(x =>
-                                                _columnsCache[x]
-                                            )
-                                        ),
-                                    ]
-                                )
-                            )
-                        )
                     ),
                 ],
                 column => new ColumnHash(column)
