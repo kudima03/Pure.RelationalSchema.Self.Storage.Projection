@@ -1,7 +1,6 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes;
 using Pure.HashCodes.Abstractions;
-using Pure.Primitives.String.Operations;
+using Pure.Primitives.Guid;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.Index;
 using Pure.RelationalSchema.HashCodes;
@@ -46,18 +45,12 @@ internal sealed record IndexProjection : IRow
                 column,
                 [
                     new KeyValuePair<IColumn, ICell>(
-                        new IsUniqueColumn(),
-                        new Cell(new String(_entity.IsUnique))
+                        new UuidColumn(),
+                        new Cell(new String(new Ulid()))
                     ),
                     new KeyValuePair<IColumn, ICell>(
-                        new CompositionHashColumn(),
-                        new Cell(
-                            new HexString(
-                                new DeterminedHash(
-                                    _entity.Columns.Select(x => _columnsCache[x])
-                                )
-                            )
-                        )
+                        new IsUniqueColumn(),
+                        new Cell(new String(_entity.IsUnique))
                     ),
                 ],
                 x => new ColumnHash(x)
