@@ -6,6 +6,8 @@ using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using String = Pure.Primitives.String.String;
+using Ulid = Pure.Primitives.Guid.Ulid;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -31,6 +33,10 @@ internal sealed record ColumnTypeProjection : IRow
             column => new CellSwitch<IColumn>(
                 column,
                 [
+                    new KeyValuePair<IColumn, ICell>(
+                        new UuidColumn(),
+                        new Cell(new String(new Ulid()))
+                    ),
                     new KeyValuePair<IColumn, ICell>(
                         new NameColumn(),
                         new Cell(_entity.Name)
