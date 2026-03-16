@@ -1,9 +1,6 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes;
-using Pure.HashCodes.Abstractions;
-using Pure.Primitives.String.Operations;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
-using Pure.RelationalSchema.Abstractions.Index;
 using Pure.RelationalSchema.Abstractions.Table;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
@@ -15,65 +12,31 @@ namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record TableProjection : IRow
 {
-    private readonly ITable _entity;
+    public TableProjection(ITable table)
+        : this(table.Name) { }
 
-    private readonly IEnumerable<IColumn> _columns;
+    public TableProjection(IString name)
+        : this(name, new TablesTable().Columns) { }
 
-    private readonly IReadOnlyDictionary<IColumn, IDeterminedHash> _columnsCache;
+    public TableProjection(IString name, IEnumerable<IColumn> columns)
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [new KeyValuePair<IColumn, ICell>(new NameColumn(), new Cell(name))],
+                    column => new ColumnHash(column)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
 
-    private readonly IReadOnlyDictionary<IIndex, IDeterminedHash> _indexCache;
-
-    public TableProjection(
-        ITable entity,
-        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache,
-        IReadOnlyDictionary<IIndex, IDeterminedHash> indexCache
-    )
-        : this(entity, new TablesTable().Columns, columnsCache, indexCache) { }
-
-    public TableProjection(
-        ITable entity,
-        IEnumerable<IColumn> columns,
-        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache,
-        IReadOnlyDictionary<IIndex, IDeterminedHash> indexCache
-    )
+    private TableProjection(IReadOnlyDictionary<IColumn, ICell> cells)
     {
-        _entity = entity;
-        _columns = columns;
-        _columnsCache = columnsCache;
-        _indexCache = indexCache;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new NameColumn(),
-                        new Cell(_entity.Name)
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new CompositionHashColumn(),
-                        new Cell(
-                            new HexString(
-                                new DeterminedHash(
-                                    [
-                                        new DeterminedHash(
-                                            _entity.Columns.Select(x => _columnsCache[x])
-                                        ),
-                                        new DeterminedHash(
-                                            _entity.Indexes.Select(x => _indexCache[x])
-                                        ),
-                                    ]
-                                )
-                            )
-                        )
-                    ),
-                ],
-                column => new ColumnHash(column)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }
