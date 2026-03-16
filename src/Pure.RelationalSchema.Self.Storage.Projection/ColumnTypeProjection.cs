@@ -1,4 +1,5 @@
 using Pure.Collections.Generic;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.ColumnType;
 using Pure.RelationalSchema.HashCodes;
@@ -13,37 +14,37 @@ namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record ColumnTypeProjection : IRow
 {
-    private readonly IColumnType _entity;
-
-    private readonly IEnumerable<IColumn> _columns;
-
     public ColumnTypeProjection(IColumnType entity)
-        : this(entity, new ColumnTypesTable().Columns) { }
+        : this(entity.Name, new ColumnTypesTable().Columns) { }
 
-    public ColumnTypeProjection(IColumnType entity, IEnumerable<IColumn> columns)
+    public ColumnTypeProjection(IString name, IEnumerable<IColumn> columns)
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new UuidColumn(),
+                            new Cell(new String(new Ulid()))
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new NameColumn(),
+                            new Cell(name)
+                        ),
+                    ],
+                    column => new ColumnHash(column)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
+
+    private ColumnTypeProjection(IReadOnlyDictionary<IColumn, ICell> cells)
     {
-        _entity = entity;
-        _columns = columns;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new UuidColumn(),
-                        new Cell(new String(new Ulid()))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new NameColumn(),
-                        new Cell(_entity.Name)
-                    ),
-                ],
-                column => new ColumnHash(column)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }
