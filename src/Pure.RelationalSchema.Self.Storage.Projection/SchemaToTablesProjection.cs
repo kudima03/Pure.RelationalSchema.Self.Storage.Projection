@@ -1,51 +1,53 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes.Abstractions;
-using Pure.Primitives.String.Operations;
+using Pure.Primitives.Abstractions.Guid;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
+using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using String = Pure.Primitives.String.String;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record SchemaToTablesProjection : IRow
 {
-    private readonly IDeterminedHash _schemaHash;
-
-    private readonly IDeterminedHash _tableHash;
-
-    private readonly IEnumerable<IColumn> _columns;
+    public SchemaToTablesProjection(IGuid referenceToSchema, IGuid referenceToTable)
+        : this(referenceToSchema, referenceToTable, new SchemasToTablesTable().Columns)
+    { }
 
     public SchemaToTablesProjection(
-        IDeterminedHash schemaHash,
-        IDeterminedHash tableHash,
+        IGuid referenceToSchema,
+        IGuid referenceToTable,
         IEnumerable<IColumn> columns
     )
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToSchemaColumn(),
+                            new Cell(new String(referenceToSchema))
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToTableColumn(),
+                            new Cell(new String(referenceToTable))
+                        ),
+                    ],
+                    column => new ColumnHash(column)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
+
+    private SchemaToTablesProjection(IReadOnlyDictionary<IColumn, ICell> cells)
     {
-        _schemaHash = schemaHash;
-        _tableHash = tableHash;
-        _columns = columns;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToSchemaColumn(),
-                        new Cell(new HexString(_schemaHash))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToTableColumn(),
-                        new Cell(new HexString(_tableHash))
-                    ),
-                ],
-                column => new ColumnHash(column)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }
