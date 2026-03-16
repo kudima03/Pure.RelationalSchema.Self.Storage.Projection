@@ -1,5 +1,5 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes.Abstractions;
+using Pure.Primitives.Abstractions.Bool;
 using Pure.Primitives.Guid;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.Abstractions.Index;
@@ -14,47 +14,40 @@ namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record IndexProjection : IRow
 {
-    private readonly IIndex _entity;
+    public IndexProjection(IIndex entity)
+        : this(entity.IsUnique) { }
 
-    private readonly IEnumerable<IColumn> _columns;
+    public IndexProjection(IBool isUnique)
+        : this(isUnique, new IndexesTable().Columns) { }
 
-    private readonly IReadOnlyDictionary<IColumn, IDeterminedHash> _columnsCache;
+    public IndexProjection(IBool isUnique, IEnumerable<IColumn> columns)
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new UuidColumn(),
+                            new Cell(new String(new Ulid()))
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new IsUniqueColumn(),
+                            new Cell(new String(isUnique))
+                        ),
+                    ],
+                    x => new ColumnHash(x)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
 
-    public IndexProjection(
-        IIndex entity,
-        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache
-    )
-        : this(entity, new IndexesTable().Columns, columnsCache) { }
-
-    public IndexProjection(
-        IIndex entity,
-        IEnumerable<IColumn> columns,
-        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache
-    )
+    private IndexProjection(IReadOnlyDictionary<IColumn, ICell> cells)
     {
-        _entity = entity;
-        _columns = columns;
-        _columnsCache = columnsCache;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new UuidColumn(),
-                        new Cell(new String(new Ulid()))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new IsUniqueColumn(),
-                        new Cell(new String(_entity.IsUnique))
-                    ),
-                ],
-                x => new ColumnHash(x)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }
