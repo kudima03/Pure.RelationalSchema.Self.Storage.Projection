@@ -15,14 +15,20 @@ namespace Pure.RelationalSchema.Self.Storage.Projection;
 internal sealed record ColumnProjection : IRow
 {
     public ColumnProjection(IColumn column, IGuid referenceToColumnType)
-        : this(column.Name, referenceToColumnType, new ColumnsTable().Columns) { }
+        : this(column.Name, referenceToColumnType) { }
+
+    public ColumnProjection(IColumn column, IString referenceToColumnType)
+        : this(column.Name, referenceToColumnType) { }
 
     public ColumnProjection(IString name, IGuid referenceToColumnType)
+        : this(name, new String(referenceToColumnType)) { }
+
+    public ColumnProjection(IString name, IString referenceToColumnType)
         : this(name, referenceToColumnType, new ColumnsTable().Columns) { }
 
     public ColumnProjection(
         IString name,
-        IGuid referenceToColumnType,
+        IString referenceToColumnType,
         IEnumerable<IColumn> columns
     )
         : this(
@@ -42,7 +48,7 @@ internal sealed record ColumnProjection : IRow
                         ),
                         new KeyValuePair<IColumn, ICell>(
                             new ReferenceToColumnTypeColumn(),
-                            new Cell(new String(referenceToColumnType))
+                            new Cell(referenceToColumnType)
                         ),
                     ],
                     column => new ColumnHash(column)
