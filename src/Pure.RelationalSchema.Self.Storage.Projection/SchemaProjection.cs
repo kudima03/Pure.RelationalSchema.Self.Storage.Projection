@@ -98,8 +98,8 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
             new TablesToColumnsTable(),
             _schema.Tables.SelectMany(x =>
                 x.Columns.Select(c => new TableToColumnProjection(
-                    tables[x].Cells[pkColumn].Value,
-                    columns[c].Cells[pkColumn].Value
+                    columns[c].Cells[pkColumn].Value,
+                    tables[x].Cells[pkColumn].Value
                 ))
             )
         );
@@ -108,9 +108,8 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
             new TablesToIndexesTable(),
             _schema.Tables.SelectMany(x =>
                 x.Indexes.Select(c => new TableToIndexProjection(
-                    tables[x].Cells[pkColumn].Value,
                     indexes[c].Cells[pkColumn].Value,
-                    new TablesToIndexesTable().Columns
+                    tables[x].Cells[pkColumn].Value
                 ))
             )
         );
@@ -135,8 +134,8 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
             _schema.ForeignKeys.SelectMany(fk =>
                 fk.ReferencingColumns.Select(
                     x => new ForeignKeyToReferencingColumnProjection(
-                        foreignKeys[fk].Cells[pkColumn].Value,
                         columns[x].Cells[pkColumn].Value,
+                        foreignKeys[fk].Cells[pkColumn].Value,
                         new ForeignKeysToReferencingColumnsTable().Columns
                     )
                 )
@@ -148,8 +147,8 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
             _schema.ForeignKeys.SelectMany(fk =>
                 fk.ReferencedColumns.Select(
                     x => new ForeignKeyToReferencingColumnProjection(
-                        foreignKeys[fk].Cells[pkColumn].Value,
                         columns[x].Cells[pkColumn].Value,
+                        foreignKeys[fk].Cells[pkColumn].Value,
                         new ForeignKeysToReferencedColumnsTable().Columns
                     )
                 )

@@ -8,11 +8,37 @@ using Pure.RelationalSchema.Self.Schema;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.HashCodes;
+using Pure.RelationalSchema.Storage.PostgreSQL;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
 
-public sealed record SchemaProjectionTests
+public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
 {
+    private readonly DatabaseFixture _fixture;
+
+    public SchemaProjectionTests(DatabaseFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
+    [Fact]
+    public void CreateInsertableRows()
+    {
+        PostgreSqlStoredSchemaDataSetWithInsertedRows a =
+            new PostgreSqlStoredSchemaDataSetWithInsertedRows(
+                new PostgreSqlStoredSchemaDataSet(
+                    new PostgreSqlCreatedSchema(
+                        new RelationalSchemaSchema(),
+                        _fixture.Connection
+                    ),
+                    _fixture.Connection
+                ),
+                new SchemaProjection(new RelationalSchemaSchema())
+            );
+
+        Assert.Equal(145, a.Sum(x => x.Value.Count()));
+    }
+
     [Fact]
     public void ProduceCorrectGroupingTables()
     {
