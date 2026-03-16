@@ -1,5 +1,6 @@
 using Pure.Collections.Generic;
 using Pure.Primitives.Abstractions.Guid;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
@@ -13,12 +14,15 @@ namespace Pure.RelationalSchema.Self.Storage.Projection;
 internal sealed record IndexToColumnsProjection : IRow
 {
     public IndexToColumnsProjection(IGuid referenceToIndex, IGuid referenceToColumn)
+        : this(new String(referenceToIndex), new String(referenceToColumn)) { }
+
+    public IndexToColumnsProjection(IString referenceToIndex, IString referenceToColumn)
         : this(referenceToIndex, referenceToColumn, new IndexesToColumnsTable().Columns)
     { }
 
     public IndexToColumnsProjection(
-        IGuid referenceToIndex,
-        IGuid referenceToColumn,
+        IString referenceToIndex,
+        IString referenceToColumn,
         IEnumerable<IColumn> columns
     )
         : this(
@@ -30,11 +34,11 @@ internal sealed record IndexToColumnsProjection : IRow
                     [
                         new KeyValuePair<IColumn, ICell>(
                             new ReferenceToIndexColumn(),
-                            new Cell(new String(referenceToIndex))
+                            new Cell(referenceToIndex)
                         ),
                         new KeyValuePair<IColumn, ICell>(
                             new ReferenceToColumnColumn(),
-                            new Cell(new String(referenceToColumn))
+                            new Cell(referenceToColumn)
                         ),
                     ],
                     column => new ColumnHash(column)
