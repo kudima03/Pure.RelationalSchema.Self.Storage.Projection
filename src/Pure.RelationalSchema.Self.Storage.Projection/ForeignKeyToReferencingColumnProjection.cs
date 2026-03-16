@@ -1,19 +1,18 @@
 using Pure.Collections.Generic;
-using Pure.Primitives.Abstractions.Guid;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using String = Pure.Primitives.String.String;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record ForeignKeyToReferencingColumnProjection : IRow
 {
     public ForeignKeyToReferencingColumnProjection(
-        IGuid referenceToColumn,
-        IGuid referenceToForeignKey,
+        IString referenceToColumn,
+        IString referenceToForeignKey,
         IEnumerable<IColumn> columns
     )
         : this(
@@ -25,11 +24,11 @@ internal sealed record ForeignKeyToReferencingColumnProjection : IRow
                     [
                         new KeyValuePair<IColumn, ICell>(
                             new ReferenceToColumnColumn(),
-                            new Cell(new String(referenceToColumn))
+                            new Cell(referenceToColumn)
                         ),
                         new KeyValuePair<IColumn, ICell>(
                             new ReferenceToForeignKeyColumn(),
-                            new Cell(new String(referenceToForeignKey))
+                            new Cell(referenceToForeignKey)
                         ),
                     ],
                     x => new ColumnHash(x)
