@@ -1,51 +1,57 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes.Abstractions;
-using Pure.Primitives.String.Operations;
+using Pure.Primitives.Abstractions.Guid;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
+using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using String = Pure.Primitives.String.String;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record IndexToColumnsProjection : IRow
 {
-    private readonly IDeterminedHash _indexHash;
+    public IndexToColumnsProjection(IGuid referenceToIndex, IGuid referenceToColumn)
+        : this(new String(referenceToIndex), new String(referenceToColumn)) { }
 
-    private readonly IDeterminedHash _columnHash;
-
-    private readonly IEnumerable<IColumn> _columns;
+    public IndexToColumnsProjection(IString referenceToIndex, IString referenceToColumn)
+        : this(referenceToIndex, referenceToColumn, new IndexesToColumnsTable().Columns)
+    { }
 
     public IndexToColumnsProjection(
-        IDeterminedHash indexHash,
-        IDeterminedHash columnHash,
+        IString referenceToIndex,
+        IString referenceToColumn,
         IEnumerable<IColumn> columns
     )
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToIndexColumn(),
+                            new Cell(referenceToIndex)
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToColumnColumn(),
+                            new Cell(referenceToColumn)
+                        ),
+                    ],
+                    column => new ColumnHash(column)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
+
+    private IndexToColumnsProjection(IReadOnlyDictionary<IColumn, ICell> cells)
     {
-        _indexHash = indexHash;
-        _columnHash = columnHash;
-        _columns = columns;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToIndexColumn(),
-                        new Cell(new HexString(_indexHash))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToColumnColumn(),
-                        new Cell(new HexString(_columnHash))
-                    ),
-                ],
-                column => new ColumnHash(column)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }

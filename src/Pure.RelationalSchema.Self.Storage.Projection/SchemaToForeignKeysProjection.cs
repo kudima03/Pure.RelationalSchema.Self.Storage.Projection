@@ -1,51 +1,67 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes.Abstractions;
-using Pure.Primitives.String.Operations;
+using Pure.Primitives.Abstractions.Guid;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
+using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using String = Pure.Primitives.String.String;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record SchemaToForeignKeysProjection : IRow
 {
-    private readonly IDeterminedHash _schemaHash;
-
-    private readonly IDeterminedHash _foreignKeyHash;
-
-    private readonly IEnumerable<IColumn> _columns;
+    public SchemaToForeignKeysProjection(
+        IGuid referenceToSchema,
+        IGuid referenceToForeignKey
+    )
+        : this(new String(referenceToSchema), new String(referenceToForeignKey)) { }
 
     public SchemaToForeignKeysProjection(
-        IDeterminedHash schemaHash,
-        IDeterminedHash foreignKeyHash,
+        IString referenceToSchema,
+        IString referenceToForeignKey
+    )
+        : this(
+            referenceToSchema,
+            referenceToForeignKey,
+            new SchemasToForeignKeysTable().Columns
+        )
+    { }
+
+    public SchemaToForeignKeysProjection(
+        IString referenceToSchema,
+        IString referenceToForeignKey,
         IEnumerable<IColumn> columns
     )
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToSchemaColumn(),
+                            new Cell(referenceToSchema)
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToForeignKeyColumn(),
+                            new Cell(referenceToForeignKey)
+                        ),
+                    ],
+                    column => new ColumnHash(column)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
+
+    private SchemaToForeignKeysProjection(IReadOnlyDictionary<IColumn, ICell> cells)
     {
-        _schemaHash = schemaHash;
-        _foreignKeyHash = foreignKeyHash;
-        _columns = columns;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToSchemaColumn(),
-                        new Cell(new HexString(_schemaHash))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToForeignKeyColumn(),
-                        new Cell(new HexString(_foreignKeyHash))
-                    ),
-                ],
-                column => new ColumnHash(column)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }

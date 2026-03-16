@@ -1,52 +1,67 @@
 using Pure.Collections.Generic;
-using Pure.Primitives.String.Operations;
+using Pure.Primitives.Abstractions.Guid;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
+using String = Pure.Primitives.String.String;
+using Ulid = Pure.Primitives.Guid.Ulid;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record ColumnProjection : IRow
 {
-    private readonly IColumn _entity;
+    public ColumnProjection(IColumn column, IGuid referenceToColumnType)
+        : this(column.Name, referenceToColumnType) { }
 
-    private readonly IEnumerable<IColumn> _columns;
+    public ColumnProjection(IColumn column, IString referenceToColumnType)
+        : this(column.Name, referenceToColumnType) { }
 
-    public ColumnProjection(IColumn entity)
-        : this(entity, new ColumnsTable().Columns) { }
+    public ColumnProjection(IString name, IGuid referenceToColumnType)
+        : this(name, new String(referenceToColumnType)) { }
 
-    public ColumnProjection(IColumn entity, IEnumerable<IColumn> columns)
+    public ColumnProjection(IString name, IString referenceToColumnType)
+        : this(name, referenceToColumnType, new ColumnsTable().Columns) { }
+
+    public ColumnProjection(
+        IString name,
+        IString referenceToColumnType,
+        IEnumerable<IColumn> columns
+    )
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new UuidColumn(),
+                            new Cell(new String(new Ulid()))
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new NameColumn(),
+                            new Cell(name)
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToColumnTypeColumn(),
+                            new Cell(referenceToColumnType)
+                        ),
+                    ],
+                    column => new ColumnHash(column)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
+
+    private ColumnProjection(IReadOnlyDictionary<IColumn, ICell> cells)
     {
-        _entity = entity;
-        _columns = columns;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new NameColumn(),
-                        new Cell(_entity.Name)
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToColumnTypeColumn(),
-                        new Cell(
-                            new HexString(
-                                new RowHash(new ColumnTypeProjection(_entity.Type))
-                            )
-                        )
-                    ),
-                ],
-                column => new ColumnHash(column)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }

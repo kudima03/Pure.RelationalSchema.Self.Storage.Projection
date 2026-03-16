@@ -1,17 +1,15 @@
 using System.Collections;
-using Pure.HashCodes.Abstractions;
 using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Column;
+using Pure.RelationalSchema.Abstractions.ColumnType;
 using Pure.RelationalSchema.Abstractions.ForeignKey;
 using Pure.RelationalSchema.Abstractions.Index;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.Abstractions.Table;
-using Pure.RelationalSchema.Column;
 using Pure.RelationalSchema.HashCodes;
+using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Self.Schema.Tables;
-using Pure.RelationalSchema.Self.Storage.Projection.Caches;
 using Pure.RelationalSchema.Storage.Abstractions;
-using Pure.RelationalSchema.Storage.HashCodes;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
@@ -26,92 +24,83 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
 
     public IEnumerator<IGrouping<ITable, IRow>> GetEnumerator()
     {
-        IReadOnlyDictionary<IColumn, IDeterminedHash> columnsCache =
-            new ColumnsPrecomputedCache(
+        IColumn pkColumn = new UuidColumn();
+
+        IReadOnlyDictionary<IColumnType, IRow> columnTypes =
+            new Collections.Generic.Dictionary<IColumnType, IColumnType, IRow>(
                 _schema
-                    .Tables.SelectMany(x => x.Columns)
-                    .Prepend(new RowDeterminedHashColumn())
-                    .DistinctBy(x => new HexString(new ColumnHash(x)).TextValue)
+                    .Tables.SelectMany(x => x.Columns.Select(c => c.Type))
+                    .DistinctBy(x => new HexString(new ColumnTypeHash(x)).TextValue),
+                x => x,
+                x => new ColumnTypeProjection(x),
+                x => new ColumnTypeHash(x)
             );
 
-        IReadOnlyDictionary<IIndex, IDeterminedHash> indexesCache =
-            new IndexesPrecomputedCache(
-                _schema
-                    .Tables.SelectMany(x => x.Indexes)
-                    .DistinctBy(x => new HexString(new IndexHash(x)).TextValue),
-                columnsCache
-            );
+        yield return new Grouping(new ColumnTypesTable(), columnTypes.Values);
 
-        IReadOnlyDictionary<ITable, IDeterminedHash> tablesCache =
-            new TablesPrecomputedCache(
-                _schema.Tables.DistinctBy(x => new HexString(new TableHash(x)).TextValue),
-                columnsCache,
-                indexesCache
-            );
-
-        IReadOnlyDictionary<IForeignKey, IDeterminedHash> foreignKeysCache =
-            new ForeignKeysPrecomputedCache(
-                _schema.ForeignKeys.DistinctBy(x =>
-                    new HexString(new ForeignKeyHash(x)).TextValue
-                ),
-                columnsCache,
-                tablesCache
-            );
-
-        IDeterminedHash cachedSchemaHash = new CachedDeterminedHash(
-            new RowHash(
-                new SchemaEntityProjection(_schema, tablesCache, foreignKeysCache)
-            )
-        );
-
-        yield return new Grouping(
-            new ColumnTypesTable(),
-            _schema
-                .Tables.SelectMany(x => x.Columns.Select(c => c.Type))
-                .Select(x => new ColumnTypeProjection(x))
-        );
-
-        yield return new Grouping(
-            new ColumnsTable(),
+        IReadOnlyDictionary<IColumn, IRow> columns = new Collections.Generic.Dictionary<
+            IColumn,
+            IColumn,
+            IRow
+        >(
             _schema
                 .Tables.SelectMany(x => x.Columns)
-                .Prepend(new RowDeterminedHashColumn())
-                .Select(x => new ColumnProjection(x))
+                .DistinctBy(x => new HexString(new ColumnHash(x)).TextValue),
+            x => x,
+            x => new ColumnProjection(x, columnTypes[x.Type].Cells[pkColumn].Value),
+            x => new ColumnHash(x)
         );
 
-        yield return new Grouping(
-            new TablesTable(),
-            _schema.Tables.Select(x => new TableProjection(x, columnsCache, indexesCache))
-        );
+        yield return new Grouping(new ColumnsTable(), columns.Values);
 
-        yield return new Grouping(
-            new TablesToColumnsTable(),
-            _schema.Tables.SelectMany(x =>
-                x.Columns.Select(c => new TableToColumnProjection(
-                    tablesCache[x],
-                    columnsCache[c],
-                    new TablesToColumnsTable().Columns
-                ))
-            )
-        );
-
-        yield return new Grouping(
-            new IndexesTable(),
+        IReadOnlyDictionary<IIndex, IRow> indexes = new Collections.Generic.Dictionary<
+            IIndex,
+            IIndex,
+            IRow
+        >(
             _schema
                 .Tables.SelectMany(x => x.Indexes)
-                .Select(x => new IndexProjection(x, columnsCache))
+                .DistinctBy(x => new HexString(new IndexHash(x)).TextValue),
+            x => x,
+            x => new IndexProjection(x),
+            x => new IndexHash(x)
         );
+
+        yield return new Grouping(new IndexesTable(), indexes.Values);
 
         yield return new Grouping(
             new IndexesToColumnsTable(),
             _schema.Tables.SelectMany(table =>
                 table.Indexes.SelectMany(x =>
                     x.Columns.Select(c => new IndexToColumnsProjection(
-                        indexesCache[x],
-                        columnsCache[c],
+                        indexes[x].Cells[pkColumn].Value,
+                        columns[c].Cells[pkColumn].Value,
                         new IndexesToColumnsTable().Columns
                     ))
                 )
+            )
+        );
+
+        IReadOnlyDictionary<ITable, IRow> tables = new Collections.Generic.Dictionary<
+            ITable,
+            ITable,
+            IRow
+        >(
+            _schema.Tables.DistinctBy(x => new HexString(new TableHash(x)).TextValue),
+            x => x,
+            x => new TableProjection(x),
+            x => new TableHash(x)
+        );
+
+        yield return new Grouping(new TablesTable(), tables.Values);
+
+        yield return new Grouping(
+            new TablesToColumnsTable(),
+            _schema.Tables.SelectMany(x =>
+                x.Columns.Select(c => new TableToColumnProjection(
+                    tables[x].Cells[pkColumn].Value,
+                    columns[c].Cells[pkColumn].Value
+                ))
             )
         );
 
@@ -119,29 +108,35 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
             new TablesToIndexesTable(),
             _schema.Tables.SelectMany(x =>
                 x.Indexes.Select(c => new TableToIndexProjection(
-                    tablesCache[x],
-                    indexesCache[c],
+                    tables[x].Cells[pkColumn].Value,
+                    indexes[c].Cells[pkColumn].Value,
                     new TablesToIndexesTable().Columns
                 ))
             )
         );
 
-        yield return new Grouping(
-            new ForeignKeysTable(),
-            _schema.ForeignKeys.Select(x => new ForeignKeyProjection(
-                x,
-                columnsCache,
-                tablesCache
-            ))
-        );
+        IReadOnlyDictionary<IForeignKey, IRow> foreignKeys =
+            new Collections.Generic.Dictionary<IForeignKey, IForeignKey, IRow>(
+                _schema.ForeignKeys.DistinctBy(x =>
+                    new HexString(new ForeignKeyHash(x)).TextValue
+                ),
+                x => x,
+                x => new ForeignKeyProjection(
+                    tables[x.ReferencingTable].Cells[pkColumn].Value,
+                    tables[x.ReferencedTable].Cells[pkColumn].Value
+                ),
+                x => new ForeignKeyHash(x)
+            );
+
+        yield return new Grouping(new ForeignKeysTable(), foreignKeys.Values);
 
         yield return new Grouping(
             new ForeignKeysToReferencingColumnsTable(),
             _schema.ForeignKeys.SelectMany(fk =>
                 fk.ReferencingColumns.Select(
                     x => new ForeignKeyToReferencingColumnProjection(
-                        foreignKeysCache[fk],
-                        columnsCache[x],
+                        foreignKeys[fk].Cells[pkColumn].Value,
+                        columns[x].Cells[pkColumn].Value,
                         new ForeignKeysToReferencingColumnsTable().Columns
                     )
                 )
@@ -153,24 +148,23 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
             _schema.ForeignKeys.SelectMany(fk =>
                 fk.ReferencedColumns.Select(
                     x => new ForeignKeyToReferencingColumnProjection(
-                        foreignKeysCache[fk],
-                        columnsCache[x],
+                        foreignKeys[fk].Cells[pkColumn].Value,
+                        columns[x].Cells[pkColumn].Value,
                         new ForeignKeysToReferencedColumnsTable().Columns
                     )
                 )
             )
         );
 
-        yield return new Grouping(
-            new SchemasTable(),
-            [new SchemaEntityProjection(_schema, tablesCache, foreignKeysCache)]
-        );
+        IRow schemaProjection = new SchemaEntityProjection(_schema);
+
+        yield return new Grouping(new SchemasTable(), [schemaProjection]);
 
         yield return new Grouping(
             new SchemasToTablesTable(),
             _schema.Tables.Select(x => new SchemaToTablesProjection(
-                cachedSchemaHash,
-                tablesCache[x],
+                schemaProjection.Cells[pkColumn].Value,
+                tables[x].Cells[pkColumn].Value,
                 new SchemasToTablesTable().Columns
             ))
         );
@@ -178,8 +172,8 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
         yield return new Grouping(
             new SchemasToForeignKeysTable(),
             _schema.ForeignKeys.Select(x => new SchemaToForeignKeysProjection(
-                cachedSchemaHash,
-                foreignKeysCache[x],
+                schemaProjection.Cells[pkColumn].Value,
+                foreignKeys[x].Cells[pkColumn].Value,
                 new SchemasToForeignKeysTable().Columns
             ))
         );
