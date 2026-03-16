@@ -1,51 +1,50 @@
 using Pure.Collections.Generic;
-using Pure.HashCodes.Abstractions;
-using Pure.Primitives.String.Operations;
+using Pure.Primitives.Abstractions.Guid;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
 using Pure.RelationalSchema.Storage;
 using Pure.RelationalSchema.Storage.Abstractions;
+using String = Pure.Primitives.String.String;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection;
 
 internal sealed record ForeignKeyToReferencingColumnProjection : IRow
 {
-    private readonly IDeterminedHash _foreignKeyHash;
-
-    private readonly IDeterminedHash _columnHash;
-
-    private readonly IEnumerable<IColumn> _columns;
-
     public ForeignKeyToReferencingColumnProjection(
-        IDeterminedHash foreignKeyHash,
-        IDeterminedHash columnHash,
+        IGuid referenceToColumn,
+        IGuid referenceToForeignKey,
         IEnumerable<IColumn> columns
     )
+        : this(
+            new Dictionary<IColumn, IColumn, ICell>(
+                columns,
+                column => column,
+                column => new CellSwitch<IColumn>(
+                    column,
+                    [
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToColumnColumn(),
+                            new Cell(new String(referenceToColumn))
+                        ),
+                        new KeyValuePair<IColumn, ICell>(
+                            new ReferenceToForeignKeyColumn(),
+                            new Cell(new String(referenceToForeignKey))
+                        ),
+                    ],
+                    x => new ColumnHash(x)
+                ),
+                column => new ColumnHash(column)
+            )
+        )
+    { }
+
+    private ForeignKeyToReferencingColumnProjection(
+        IReadOnlyDictionary<IColumn, ICell> cells
+    )
     {
-        _foreignKeyHash = foreignKeyHash;
-        _columnHash = columnHash;
-        _columns = columns;
+        Cells = cells;
     }
 
-    public IReadOnlyDictionary<IColumn, ICell> Cells =>
-        new Dictionary<IColumn, IColumn, ICell>(
-            _columns,
-            column => column,
-            column => new CellSwitch<IColumn>(
-                column,
-                [
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToColumnColumn(),
-                        new Cell(new HexString(_columnHash))
-                    ),
-                    new KeyValuePair<IColumn, ICell>(
-                        new ReferenceToForeignKeyColumn(),
-                        new Cell(new HexString(_foreignKeyHash))
-                    ),
-                ],
-                x => new ColumnHash(x)
-            ),
-            column => new ColumnHash(column)
-        );
+    public IReadOnlyDictionary<IColumn, ICell> Cells { get; }
 }
