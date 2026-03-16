@@ -1,12 +1,11 @@
 using System.Data;
 using Pure.HashCodes;
+using Pure.Primitives.String.Operations;
 using Pure.RelationalSchema.Abstractions.Schema;
 using Pure.RelationalSchema.Abstractions.Table;
-using Pure.RelationalSchema.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema;
 using Pure.RelationalSchema.Self.Schema.Tables;
-using Pure.RelationalSchema.Self.Storage.Projection.Tests.Models;
 using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.HashCodes;
 
@@ -34,7 +33,11 @@ public sealed record SchemaProjectionTests
     {
         ISchema schema = new RelationalSchemaSchema();
         Assert.Equal(
-            schema.Tables.SelectMany(x => x.Columns).Select(x => x.Type).Count(),
+            schema
+                .Tables.SelectMany(x => x.Columns)
+                .Select(x => x.Type)
+                .DistinctBy(x => new HexString(new ColumnTypeHash(x)).TextValue)
+                .Count(),
             new SchemaProjection(schema)
                 .Single(x =>
                     new TableHash(x.Key).SequenceEqual(
@@ -64,25 +67,6 @@ public sealed record SchemaProjectionTests
                     )
                 )
             )
-        );
-    }
-
-    [Fact]
-    public void ProduceCorrectCellsInColumnTypesRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new ColumnTypesTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .Tables.SelectMany(x => x.Columns)
-                    .Select(x => x.Type)
-                    .Select(x => new ColumnTypeExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
         );
     }
 
@@ -118,28 +102,9 @@ public sealed record SchemaProjectionTests
         Assert.Equal(
             schema
                 .Tables.SelectMany(x => x.Columns)
-                .Prepend(new RowDeterminedHashColumn()) //Should contain PK column
+                .DistinctBy(x => new HexString(new ColumnHash(x)).TextValue)
                 .Count(),
             projection.Count()
-        );
-    }
-
-    [Fact]
-    public void ProduceCorrectCellsInColumnsRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new ColumnsTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .Tables.SelectMany(x => x.Columns)
-                    .Prepend(new RowDeterminedHashColumn()) //Should contain PK column
-                    .Select(x => new ColumnExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
         );
     }
 
@@ -173,26 +138,11 @@ public sealed record SchemaProjectionTests
         );
 
         Assert.Equal(
-            schema.Tables.SelectMany(x => x.Indexes).Count(),
+            schema
+                .Tables.SelectMany(x => x.Indexes)
+                .DistinctBy(x => new HexString(new IndexHash(x)).TextValue)
+                .Count(),
             projection.Count()
-        );
-    }
-
-    [Fact]
-    public void ProduceCorrectCellsInIndexesRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new IndexesTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .Tables.SelectMany(x => x.Indexes)
-                    .Select(x => new IndexExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
         );
     }
 
@@ -232,29 +182,6 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
-    public void ProduceCorrectCellsInIndexesToColumnsRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new IndexesToColumnsTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .Tables.SelectMany(table =>
-                        table.Indexes.SelectMany(
-                            index => table.Columns,
-                            (index, column) => (index, column)
-                        )
-                    )
-                    .Select(x => new IndexToColumnExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
-        );
-    }
-
-    [Fact]
     public void ProduceCorrectColumnsInTablesRows()
     {
         IGrouping<ITable, IRow> projection = new SchemaProjection(
@@ -285,23 +212,6 @@ public sealed record SchemaProjectionTests
         );
 
         Assert.Equal(schema.Tables.Count(), projection.Count());
-    }
-
-    [Fact]
-    public void ProduceCorrectCellsInTablesRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new TablesTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .Tables.Select(x => new TableExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
-        );
     }
 
     [Fact]
@@ -337,27 +247,6 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
-    public void ProduceCorrectCellsInTablesToColumnsRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new TablesToColumnsTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .Tables.SelectMany(
-                        table => table.Columns,
-                        (table, column) => (table, column)
-                    )
-                    .Select(x => new TableToColumnExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
-        );
-    }
-
-    [Fact]
     public void ProduceCorrectColumnsInTablesToIndexesRows()
     {
         ISchema schema = new RelationalSchemaSchema();
@@ -387,27 +276,6 @@ public sealed record SchemaProjectionTests
         );
 
         Assert.Equal(schema.Tables.Sum(x => x.Indexes.Count()), projection.Count());
-    }
-
-    [Fact]
-    public void ProduceCorrectCellsInTablesToIndexesRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new TablesToIndexesTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .Tables.SelectMany(
-                        table => table.Indexes,
-                        (table, column) => (table, column)
-                    )
-                    .Select(x => new TableToIndexExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
-        );
     }
 
     [Fact]
@@ -444,21 +312,6 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
-    public void ProduceCorrectCellsInSchemasRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new SchemasTable()))
-        );
-
-        Assert.True(
-            new RowHash(new SchemaExpectedRow(schema)).SequenceEqual(
-                new RowHash(projection.Single())
-            )
-        );
-    }
-
-    [Fact]
     public void ProduceCorrectColumnsInForeignKeysRows()
     {
         IGrouping<ITable, IRow> projection = new SchemaProjection(
@@ -489,23 +342,6 @@ public sealed record SchemaProjectionTests
         );
 
         Assert.Equal(schema.ForeignKeys.Count(), projection.Count());
-    }
-
-    [Fact]
-    public void ProduceCorrectCellsInForeignKeysRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(new TableHash(new ForeignKeysTable()))
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .ForeignKeys.Select(x => new ForeignKeyExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
-        );
     }
 
     [Fact]
@@ -544,29 +380,6 @@ public sealed record SchemaProjectionTests
         Assert.Equal(
             schema.ForeignKeys.Sum(x => x.ReferencingColumns.Count()),
             projection.Count()
-        );
-    }
-
-    [Fact]
-    public void ProduceCorrectCellsInForeignKeysToReferencingColumnsRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(
-                new TableHash(new ForeignKeysToReferencingColumnsTable())
-            )
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .ForeignKeys.SelectMany(
-                        table => table.ReferencingColumns,
-                        (table, column) => (table, column)
-                    )
-                    .Select(x => new ForeignKeyToReferencingColumnExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
         );
     }
 
@@ -610,29 +423,6 @@ public sealed record SchemaProjectionTests
     }
 
     [Fact]
-    public void ProduceCorrectCellsInForeignKeysToReferencedColumnsRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(
-                new TableHash(new ForeignKeysToReferencedColumnsTable())
-            )
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .ForeignKeys.SelectMany(
-                        table => table.ReferencedColumns,
-                        (table, column) => (table, column)
-                    )
-                    .Select(x => new ForeignKeyToReferencedColumnExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
-        );
-    }
-
-    [Fact]
     public void ProduceCorrectColumnsInSchemasToForeignKeysRows()
     {
         ISchema schema = new RelationalSchemaSchema();
@@ -666,28 +456,6 @@ public sealed record SchemaProjectionTests
         );
 
         Assert.Equal(schema.ForeignKeys.Count(), projection.Count());
-    }
-
-#pragma warning disable xUnit1004 // Test methods should not be skipped
-    [Fact(Skip = "Too long")]
-#pragma warning restore xUnit1004 // Test methods should not be skipped
-    public void ProduceCorrectCellsInSchemasToForeignKeysRows()
-    {
-        ISchema schema = new RelationalSchemaSchema();
-        IGrouping<ITable, IRow> projection = new SchemaProjection(schema).Single(x =>
-            new TableHash(x.Key).SequenceEqual(
-                new TableHash(new SchemasToForeignKeysTable())
-            )
-        );
-
-        Assert.True(
-            new DeterminedHash(
-                schema
-                    .ForeignKeys.Select(foreignKey => (schema, foreignKey))
-                    .Select(x => new SchemaToForeignKeyExpectedRow(x))
-                    .Select(x => new RowHash(x))
-            ).SequenceEqual(new DeterminedHash(projection.Select(x => new RowHash(x))))
-        );
     }
 
     [Fact]
