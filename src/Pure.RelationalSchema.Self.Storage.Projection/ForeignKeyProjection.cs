@@ -1,5 +1,6 @@
 using Pure.Collections.Generic;
 using Pure.Primitives.Abstractions.Guid;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
@@ -18,6 +19,17 @@ internal sealed record ForeignKeyProjection : IRow
         IGuid referenceToReferencedTable
     )
         : this(
+            new String(referenceToReferencingTable),
+            new String(referenceToReferencedTable),
+            new ForeignKeysTable().Columns
+        )
+    { }
+
+    public ForeignKeyProjection(
+        IString referenceToReferencingTable,
+        IString referenceToReferencedTable
+    )
+        : this(
             referenceToReferencingTable,
             referenceToReferencedTable,
             new ForeignKeysTable().Columns
@@ -25,8 +37,8 @@ internal sealed record ForeignKeyProjection : IRow
     { }
 
     public ForeignKeyProjection(
-        IGuid referenceToReferencingTable,
-        IGuid referenceToReferencedTable,
+        IString referenceToReferencingTable,
+        IString referenceToReferencedTable,
         IEnumerable<IColumn> columns
     )
         : this(
@@ -42,11 +54,11 @@ internal sealed record ForeignKeyProjection : IRow
                         ),
                         new KeyValuePair<IColumn, ICell>(
                             new ReferencingTableColumn(),
-                            new Cell(new String(referenceToReferencingTable))
+                            new Cell(referenceToReferencingTable)
                         ),
                         new KeyValuePair<IColumn, ICell>(
                             new ReferencedTableColumn(),
-                            new Cell(new String(referenceToReferencedTable))
+                            new Cell(referenceToReferencedTable)
                         ),
                     ],
                     column => new ColumnHash(column)
