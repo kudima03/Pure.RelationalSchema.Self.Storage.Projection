@@ -1,5 +1,6 @@
 using Pure.Collections.Generic;
 using Pure.Primitives.Abstractions.Guid;
+using Pure.Primitives.Abstractions.String;
 using Pure.RelationalSchema.Abstractions.Column;
 using Pure.RelationalSchema.HashCodes;
 using Pure.RelationalSchema.Self.Schema.Columns;
@@ -16,6 +17,12 @@ internal sealed record SchemaToForeignKeysProjection : IRow
         IGuid referenceToSchema,
         IGuid referenceToForeignKey
     )
+        : this(new String(referenceToSchema), new String(referenceToForeignKey)) { }
+
+    public SchemaToForeignKeysProjection(
+        IString referenceToSchema,
+        IString referenceToForeignKey
+    )
         : this(
             referenceToSchema,
             referenceToForeignKey,
@@ -24,8 +31,8 @@ internal sealed record SchemaToForeignKeysProjection : IRow
     { }
 
     public SchemaToForeignKeysProjection(
-        IGuid referenceToSchema,
-        IGuid referenceToForeignKey,
+        IString referenceToSchema,
+        IString referenceToForeignKey,
         IEnumerable<IColumn> columns
     )
         : this(
@@ -37,11 +44,11 @@ internal sealed record SchemaToForeignKeysProjection : IRow
                     [
                         new KeyValuePair<IColumn, ICell>(
                             new ReferenceToSchemaColumn(),
-                            new Cell(new String(referenceToSchema))
+                            new Cell(referenceToSchema)
                         ),
                         new KeyValuePair<IColumn, ICell>(
                             new ReferenceToForeignKeyColumn(),
-                            new Cell(new String(referenceToForeignKey))
+                            new Cell(referenceToForeignKey)
                         ),
                     ],
                     column => new ColumnHash(column)
