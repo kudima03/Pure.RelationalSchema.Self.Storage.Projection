@@ -12,7 +12,7 @@ dotnet build --no-restore -warnaserror
 dotnet format --verify-no-changes             # check code style (CI enforces this)
 dotnet format                                 # auto-fix code style
 dotnet test --no-build --verbosity normal     # run unit tests
-dotnet pack --configuration Release -p:PackageVersion=<version> --output .
+dotnet pack --configuration Release -p:Version=<version> --output .
 ```
 
 ## Architecture
