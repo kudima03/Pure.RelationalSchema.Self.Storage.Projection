@@ -15,6 +15,8 @@ dotnet test --no-build --verbosity normal     # run unit tests
 dotnet pack --configuration Release -p:Version=<version> --output .
 ```
 
+CI additionally passes `-p:AssemblyVersion` (pinned to the major) and `-p:FileVersion`; see `.github/workflows/publish-nuget.yml`.
+
 ## Architecture
 
 This is a **projection NuGet library** — no abstractions defined here, no CLI surface. The single responsibility is mapping an `ISchema` (from `Pure.RelationalSchema.Abstractions`) into a set of `IRow` groups ready for storage.
