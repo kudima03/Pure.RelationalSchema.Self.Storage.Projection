@@ -8,7 +8,9 @@ using Pure.RelationalSchema.Self.Schema;
 using Pure.RelationalSchema.Self.Schema.Tables;
 using Pure.RelationalSchema.Storage.Abstractions;
 using Pure.RelationalSchema.Storage.HashCodes;
-using Pure.RelationalSchema.Storage.PostgreSQL;
+using Pure.RelationalSchema.Storage.PostgreSQL.Creation;
+using Pure.RelationalSchema.Storage.PostgreSQL.Insertion;
+using Pure.RelationalSchema.Storage.PostgreSQL.Querying;
 
 namespace Pure.RelationalSchema.Self.Storage.Projection.Tests;
 
