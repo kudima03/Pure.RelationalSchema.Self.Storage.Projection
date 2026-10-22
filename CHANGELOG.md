@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.1.0-preview.6.1.0] — 2026-10-22
+
+### Changed
+
+- Updated `Pure.Primitives` from 3.6.5 to 3.7.0.
+- The package now includes `README.md`.
+- Assembly and file versions are now stamped from the release tag.
+
 ## [0.1.0-preview.6.0.5] — 2026-08-06
 
 - Maintenance release: dependency and build updates.
