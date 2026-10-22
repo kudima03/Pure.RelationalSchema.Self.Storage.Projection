@@ -35,7 +35,7 @@ All implement `IRow`. Utility: `CellSwitch<T>` dispatches on column identity to 
 
 **Multi-targeting:** net8.0, net9.0, net10.0. All code must remain AOT-compatible (`IsAotCompatible = true`).
 
-**Package validation:** `EnablePackageValidation = true` with baseline `0.1.0-preview.4.0.0`. Any breaking API change fails the build.
+**Package validation:** `EnablePackageValidation = true` with baseline `0.1.0-preview.6.2.0`. Any breaking API change fails the build.
 
 **Publishing:** triggered by pushing a semver tag (pattern `*.*.*`). The tag value becomes `PackageVersion`.
 
