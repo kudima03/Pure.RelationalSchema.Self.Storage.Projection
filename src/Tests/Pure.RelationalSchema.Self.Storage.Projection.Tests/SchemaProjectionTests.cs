@@ -38,7 +38,7 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
                 new SchemaProjection(new RelationalSchemaSchema())
             );
 
-        Assert.Equal(145, a.Sum(x => x.Value.Count()));
+        Assert.Equal(150, a.Sum(x => x.Value.Count()));
     }
 
     [Fact]
