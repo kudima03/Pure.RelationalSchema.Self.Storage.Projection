@@ -70,14 +70,12 @@ public sealed record SchemaProjection : IEnumerable<IGrouping<ITable, IRow>>
 
         yield return new Grouping(
             new IndexesToColumnsTable(),
-            _schema.Tables.SelectMany(table =>
-                table.Indexes.SelectMany(x =>
-                    x.Columns.Select(c => new IndexToColumnsProjection(
-                        indexes[x].Cells[pkColumn].Value,
-                        columns[c].Cells[pkColumn].Value,
-                        new IndexesToColumnsTable().Columns
-                    ))
-                )
+            indexes.Keys.SelectMany(x =>
+                x.Columns.Select(c => new IndexToColumnsProjection(
+                    indexes[x].Cells[pkColumn].Value,
+                    columns[c].Cells[pkColumn].Value,
+                    new IndexesToColumnsTable().Columns
+                ))
             )
         );
 
