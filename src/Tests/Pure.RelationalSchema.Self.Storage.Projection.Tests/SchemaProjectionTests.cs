@@ -38,7 +38,7 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
                 new SchemaProjection(new RelationalSchemaSchema())
             );
 
-        Assert.Equal(150, a.Sum(x => x.Value.Count()));
+        Assert.Equal(145, a.Sum(x => x.Value.Count()));
     }
 
     [Fact]
@@ -204,8 +204,26 @@ public sealed record SchemaProjectionTests : IClassFixture<DatabaseFixture>
         );
 
         Assert.Equal(
-            schema.Tables.SelectMany(x => x.Indexes).Sum(x => x.Columns.Count()),
+            schema
+                .Tables.SelectMany(x => x.Indexes)
+                .DistinctBy(x => new HexString(new IndexHash(x)).TextValue)
+                .Sum(x => x.Columns.Count()),
             projection.Count()
+        );
+    }
+
+    [Fact]
+    public void ProduceDistinctIndexesToColumnsRows()
+    {
+        IGrouping<ITable, IRow> projection = new SchemaProjection(
+            new RelationalSchemaSchema()
+        ).Single(x =>
+            new TableHash(x.Key).SequenceEqual(new TableHash(new IndexesToColumnsTable()))
+        );
+
+        Assert.Equal(
+            projection.Count(),
+            projection.DistinctBy(x => new HexString(new RowHash(x)).TextValue).Count()
         );
     }
 
