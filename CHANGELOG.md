@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.1.0-preview.6.3.1] — 2026-11-05
+
+### Fixed
+
+- `SchemaProjection` no longer emits duplicate `indexes_to_columns` rows when several tables share a structurally identical index (#172).
+
 ## [0.1.0-preview.6.3.0] — 2026-10-23
 
 ### Changed
