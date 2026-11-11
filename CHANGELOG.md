@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.1.0-preview.6.4.0] — 2026-11-11
+
+### Added
+
+- .NET 11 (`net11.0`) target framework support.
+
+### Changed
+
+- Updated `Pure.Collections.Generic` from 0.1.0-preview.3.0.0 to 0.1.0-preview.3.1.0.
+- Updated `Pure.Primitives` from 3.7.0 to 3.8.0.
+- Updated `Pure.Primitives.String.Operations` from 1.7.0 to 1.8.0.
+- Updated `Pure.RelationalSchema.HashCodes` from 3.3.0 to 3.4.0.
+- Updated `Pure.RelationalSchema.Self.Schema` from 0.1.0-preview.6.1.0 to 0.1.0-preview.6.2.0.
+- Updated `Pure.RelationalSchema.Storage` from 0.1.0-preview.8.0.0 to 0.1.0-preview.8.1.0.
+- Updated `Pure.RelationalSchema.Storage.HashCodes` from 0.1.0-preview.2.2.0 to 0.1.0-preview.2.3.0.
+
 ## [0.1.0-preview.6.3.1] — 2026-11-05
 
 ### Fixed
