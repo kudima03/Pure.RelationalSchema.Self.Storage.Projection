@@ -61,6 +61,7 @@ Each entity is identified by a ULID-based UUID cell and deduplicated by a conten
 - .NET 8
 - .NET 9
 - .NET 10
+- .NET 11
 
 ## Installation
 
